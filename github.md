@@ -1,24 +1,24 @@
-repo: CortezWalter/fundacion
+repo: G-Huentala/foundation-huentala-dashboard
 branch: main
 
 ## About
-Proyecto React + TypeScript + Vite — refactor de la app "Fundación Huentala — Panel de gestión".
-Segundo repo relacionado: karinwagnera-cpu/WebAppFundaci-n (versión monolítica en un solo HTML).
+Proyecto React + TypeScript + Vite — panel de gestión de la Fundación Huentala.
+Datos compartidos (registros y campañas) en Supabase (Postgres), sin autenticación todavía.
 
-## Last sync
-date: 2026-09-16T15:49:00Z
-
-### Updated in this project
-- Clonado CortezWalter/fundacion (32 archivos: React + TS + Vite)
-- Preservada la versión monolítica anterior como WebAppFundacion-standalone.html
+## Historial
+Este repo reemplaza a los anteriores:
+- `karinwagnera-cpu/WebAppFundaci-n` (versión monolítica en un solo HTML, no se sigue usando)
+- `CortezWalter/fundacion` (primer refactor React/TS/Vite, quedó desactualizado)
 
 ## Screen map
 | Pantalla | Archivo de origen |
 | --- | --- |
 | Dashboard | src/views/Dashboard.tsx |
 | Registro | src/views/Registro.tsx |
+| Campañas | src/views/Campanas.tsx |
+| Analítica | src/views/Analitica.tsx |
 | Calendario | src/views/Calendario.tsx |
-| Informes | src/views/Informes.tsx |
 | Documentación | src/views/Documentacion.tsx |
+| Configuración | src/views/Configuracion.tsx |
 | App shell (sidebar, navbar) | src/App.tsx, src/components/ |
-| Versión standalone (1 archivo, corre sin build) | WebAppFundacion-standalone.html |
+| Versión standalone (referencia de diseño, no se edita más) | WebAppFundacion-standalone.html |
