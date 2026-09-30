@@ -119,14 +119,14 @@
 
   /* ---------- App shell ---------- */
   /* ---------- LAYOUT: sidebar + main ---------- */
-  #app{display:flex;min-height:100vh;}
+  #app{display:flex;height:100vh;overflow:hidden;}
   :root{ --sidebar-w:92px; --navbar-h:64px; }
 
   .sidebar{
     width:var(--sidebar-w);flex-shrink:0;
     background:var(--panel);border-right:1px solid var(--line);
     display:flex;flex-direction:column;
-    position:sticky;top:0;height:100vh;
+    height:100vh;overflow-y:auto;
     z-index:50;
   }
   .sidebar-head{
@@ -157,7 +157,7 @@
 
   .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(36,29,23,.45);z-index:49;}
 
-  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .main{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;overflow:hidden;}
 
   /* ---------- NAVBAR superior ---------- */
   .navbar{
@@ -186,7 +186,7 @@
   .hamburger:hover{border-color:var(--maroon);background:var(--maroon-tint);}
   .hamburger span{display:block;height:2px;width:100%;background:var(--ink);border-radius:2px;}
 
-  .content{padding:26px 24px 80px;flex:1;}
+  .content{padding:26px 24px;flex:1;min-height:0;overflow-y:auto;}
 
   .save-pill{
     font-size:11.5px;color:var(--muted);
@@ -767,7 +767,11 @@
 
   .rd-footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);text-align:center;}
 
-  footer.foot{margin-top:40px;padding:16px 22px;background:var(--panel);border-radius:var(--radius-card);box-shadow:var(--shadow-soft);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  footer.foot{
+    flex-shrink:0;
+    padding:13px 24px;background:var(--panel);border-top:1px solid var(--line);box-shadow:var(--shadow-soft);
+    font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
   footer.foot button.linklike{background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12px;padding:0;}
   footer.foot button.linklike:hover{color:var(--maroon);}
   footer.foot .foot-credit{font-weight:600;color:var(--ink-soft);white-space:nowrap;}
@@ -809,7 +813,7 @@
   /* agenda */
   .cal-agenda{display:flex;flex-direction:column;gap:0;}
   .cal-agenda-month{margin-bottom:8px;}
-  .cal-agenda-month .agm-title{font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--maroon);padding:14px 4px 8px;text-transform:capitalize;position:sticky;top:var(--navbar-h);background:var(--bg);z-index:2;}
+  .cal-agenda-month .agm-title{font-family:var(--font-serif);font-size:16px;font-weight:600;color:var(--maroon);padding:14px 4px 8px;text-transform:capitalize;position:sticky;top:0;background:var(--bg);z-index:2;}
   .cal-agenda-item{display:flex;gap:14px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:border-color .12s ease,transform .12s ease;}
   .cal-agenda-item:hover{border-color:var(--line-strong);transform:translateX(2px);}
   .cal-agenda-date{flex-shrink:0;width:52px;text-align:center;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line);padding-right:12px;}
@@ -838,9 +842,9 @@
       --bg:#fff; --panel:#fff; --panel-2:#faf8f4; --ink:#221C17; --ink-soft:#3a3128;
       --muted:#6b6155; --line:#d8d0c2; --line-strong:#c4baa8; --grid-line:#e6ddcf;
     }
-    #app{display:block !important;}
-    .main{display:block !important;}
-    .content{padding:0 !important;}
+    #app{display:block !important;height:auto !important;overflow:visible !important;}
+    .main{display:block !important;height:auto !important;overflow:visible !important;}
+    .content{padding:0 !important;height:auto !important;overflow:visible !important;}
     section.view{display:none !important;}
     section.view#view-analitica{display:block !important;}
     .report-doc{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;}
@@ -889,7 +893,8 @@
   @media (max-width:600px){
     .navbar-search{display:none;}
     .navbar{padding:0 14px;gap:10px;}
-    .content{padding:18px 14px 60px;}
+    .content{padding:18px 14px;}
+    footer.foot{padding:10px 14px;font-size:11px;}
   }
   @media (max-width:520px){
     .kpi-grid{grid-template-columns:1fr;}

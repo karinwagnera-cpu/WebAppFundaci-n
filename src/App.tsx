@@ -437,15 +437,15 @@ export default function App() {
               puedeEditar={puedeEditar}
             />
           )}
-
-          <footer className="foot">
-            <span>
-              Fundación Huentala · {sinConexion ? 'sin conexión con la base compartida, mostrando copia local' : 'datos compartidos en la nube'} ·{' '}
-              <span style={{ opacity: 0.6 }}>React 19 · {registros.length} registros</span>
-            </span>
-            <span className="foot-credit">By Karin Wagner for Grupo Huentala</span>
-          </footer>
         </div>
+
+        <footer className="foot">
+          <span>
+            Fundación Huentala · {sinConexion ? 'sin conexión con la base compartida, mostrando copia local' : 'datos compartidos en la nube'} ·{' '}
+            <span style={{ opacity: 0.6 }}>React 19 · {registros.length} registros</span>
+          </span>
+          <span className="foot-credit">By Karin Wagner for Grupo Huentala</span>
+        </footer>
       </div>
 
       {detalle && (
