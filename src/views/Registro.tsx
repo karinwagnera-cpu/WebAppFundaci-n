@@ -21,7 +21,7 @@ interface Props {
 
 const num = (v: unknown): boolean => v !== null && v !== undefined && v !== '';
 
-type ColumnaFiltrable = 'fecha' | 'tipo' | 'eje' | 'unidad' | 'beneficiario' | 'aporte' | 'costo' | 'inversion' | 'horas';
+type ColumnaFiltrable = 'fecha' | 'tipo' | 'eje' | 'unidad' | 'beneficiario' | 'aporte' | 'costo' | 'inversion' | 'horas' | 'numeroCertificado' | 'numeroFactura';
 
 const valorColumna = (r: Registro, col: ColumnaFiltrable): string => {
   switch (col) {
@@ -34,6 +34,8 @@ const valorColumna = (r: Registro, col: ColumnaFiltrable): string => {
     case 'costo': return num(r.costo) ? fmtMoney(r.costo) : '';
     case 'inversion': return num(r.inversion) ? fmtMoney(r.inversion) : '';
     case 'horas': return num(r.horas) ? String(r.horas) : '';
+    case 'numeroCertificado': return r.numeroCertificado || '';
+    case 'numeroFactura': return r.numeroFactura || '';
     default: return '';
   }
 };
@@ -48,6 +50,8 @@ const COLUMNAS: Array<{ col: ColumnaFiltrable; label: string; num?: boolean }> =
   { col: 'costo', label: 'Costo interno', num: true },
   { col: 'inversion', label: 'Inversión', num: true },
   { col: 'horas', label: 'Horas', num: true },
+  { col: 'numeroCertificado', label: 'N° Certificado' },
+  { col: 'numeroFactura', label: 'N° Factura' },
 ];
 
 export default function RegistroView({
@@ -89,7 +93,7 @@ export default function RegistroView({
         if (filtro.y && (!r.fecha || r.fecha.slice(0, 4) !== filtro.y)) return false;
         if (filtro.m && (!r.fecha || r.fecha.slice(5, 7) !== filtro.m)) return false;
         if (filtro.e && r.eje !== filtro.e && r.ejeSecundario !== filtro.e) return false;
-        if (q && ![r.beneficiario, r.aporte, r.contacto, r.motivo, r.eje, r.ejeSecundario, r.unidad].join(' ').toLowerCase().includes(q)) return false;
+        if (q && ![r.beneficiario, r.aporte, r.contacto, r.motivo, r.eje, r.ejeSecundario, r.unidad, r.numeroCertificado, r.numeroFactura].join(' ').toLowerCase().includes(q)) return false;
         for (const [col, val] of Object.entries(colFiltros)) {
           if (!val || !val.trim()) continue;
           if (!valorColumna(r, col as ColumnaFiltrable).toLowerCase().includes(val.toLowerCase().trim())) return false;
@@ -248,6 +252,8 @@ export default function RegistroView({
                   <td className="num">{num(r.costo) ? fmtMoney(r.costo) : '—'}</td>
                   <td className="num">{num(r.inversion) ? fmtMoney(r.inversion) : '—'}</td>
                   <td className="num">{num(r.horas) ? r.horas : '—'}</td>
+                  <td>{r.numeroCertificado || '—'}</td>
+                  <td>{r.numeroFactura || '—'}</td>
                   <td>
                     <div className="docs-col">
                       <span className={r.tieneFotos ? 'has' : ''}><Icon name="photo" size={14} />{r.fotosCount || 0}</span>

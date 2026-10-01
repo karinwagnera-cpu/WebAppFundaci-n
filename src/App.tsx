@@ -230,6 +230,8 @@ export default function App() {
       horas: form.horas !== '' ? Number(form.horas) : null,
       contacto: form.contacto.trim(),
       observaciones: form.observaciones.trim(),
+      numeroCertificado: form.numeroCertificado.trim() || null,
+      numeroFactura: form.numeroFactura.trim() || null,
       fotosCount: form.fotos.length,
       tieneFotos: form.fotos.length > 0,
       constanciaCount: form.consts.length,

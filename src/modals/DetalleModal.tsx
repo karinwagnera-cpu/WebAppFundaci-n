@@ -24,6 +24,8 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
   push('Inversión (valor)', cargado(r.inversion) ? fmtMoney(r.inversion) : '', true);
   push('Horas de voluntariado', cargado(r.horas) ? `${r.horas} hs` : '', true);
   push('Contacto', tituloTexto(r.contacto));
+  push('N° de certificado', r.numeroCertificado || '');
+  push('N° de factura', r.numeroFactura || '');
 
   const hayDesc = cargado(r.motivo) || cargado(r.observaciones);
 

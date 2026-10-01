@@ -6,13 +6,14 @@ import { descargar } from './storage';
 export const PLANTILLA_HEADERS = [
   'Fecha', 'Tipo de movimiento', 'Eje estratégico principal', 'Eje estratégico secundario',
   'Unidad de negocio', 'Beneficiario / Institución', 'Donación o aporte', 'Descripción',
-  'Costo interno (ARS)', 'Inversión (ARS)', 'Horas de voluntariado', 'Contacto', 'Observaciones',
+  'Costo interno (ARS)', 'Inversión (ARS)', 'Horas de voluntariado', 'Contacto',
+  'N° de certificado', 'N° de factura', 'Observaciones',
 ];
 
 const FILA_EJEMPLO = [
   '2026-03-15', 'Donación realizada', 'INFANCIA Y EDUCACIÓN', '',
   'Fundación', 'Escuela N°12', '20 mochilas', 'Kits escolares para inicio de clases',
-  '150000', '0', '', 'María Pérez', '',
+  '150000', '0', '', 'María Pérez', '', '', '',
 ];
 
 // Se importa dinámicamente: xlsx pesa ~500KB y solo lo necesita el admin al importar/exportar plantillas.
@@ -147,6 +148,8 @@ export async function parseExcelRegistros(file: File, proximoId: number): Promis
       inversion: inversionRes.valor,
       horas: horasRes.valor,
       contacto: String(get('Contacto') ?? '').trim() || null,
+      numeroCertificado: String(get('N° de certificado') ?? '').trim() || null,
+      numeroFactura: String(get('N° de factura') ?? '').trim() || null,
       observaciones: String(get('Observaciones') ?? '').trim() || null,
       fotosCount: 0,
       tieneFotos: false,

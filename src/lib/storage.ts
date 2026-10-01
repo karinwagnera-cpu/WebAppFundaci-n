@@ -97,6 +97,8 @@ interface RegistroRow {
   difusion: string | null;
   horas: number | null;
   inversion: number | null;
+  numero_certificado: string | null;
+  numero_factura: string | null;
   fotos_count: number;
   tiene_fotos: boolean;
   constancia_count: number;
@@ -120,6 +122,8 @@ const registroDesdeFila = (row: RegistroRow): Registro => ({
   difusion: row.difusion,
   horas: row.horas,
   inversion: row.inversion,
+  numeroCertificado: row.numero_certificado,
+  numeroFactura: row.numero_factura,
   fotosCount: row.fotos_count,
   tieneFotos: row.tiene_fotos,
   constanciaCount: row.constancia_count,
@@ -143,6 +147,8 @@ const filaDesdeRegistro = (r: Registro): RegistroRow => ({
   difusion: r.difusion ?? null,
   horas: r.horas ?? null,
   inversion: r.inversion ?? null,
+  numero_certificado: r.numeroCertificado ?? null,
+  numero_factura: r.numeroFactura ?? null,
   fotos_count: r.fotosCount ?? 0,
   tiene_fotos: r.tieneFotos ?? false,
   constancia_count: r.constanciaCount ?? 0,

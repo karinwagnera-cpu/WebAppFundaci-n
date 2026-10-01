@@ -29,6 +29,8 @@ const vacio = (r: Registro | null): RegistroForm => {
     horas: r?.horas !== null && r?.horas !== undefined ? String(r.horas) : '',
     contacto: r?.contacto ?? '',
     observaciones: r?.observaciones ?? '',
+    numeroCertificado: r?.numeroCertificado ?? '',
+    numeroFactura: r?.numeroFactura ?? '',
     fotos: adj.fotos,
     consts: adj.consts,
   };
@@ -165,7 +167,15 @@ export default function RegistroModal({ registro, onGuardar, onEliminar, onCerra
               <label htmlFor="fdContacto">Contacto</label>
               <input id="fdContacto" type="text" value={form.contacto} onChange={(e) => set('contacto', e.target.value)} />
             </div>
-            <div className="field c8">
+            <div className="field c4">
+              <label htmlFor="fdNumCert">N° de certificado</label>
+              <input id="fdNumCert" type="text" value={form.numeroCertificado} onChange={(e) => set('numeroCertificado', e.target.value)} />
+            </div>
+            <div className="field c4">
+              <label htmlFor="fdNumFact">N° de factura</label>
+              <input id="fdNumFact" type="text" value={form.numeroFactura} onChange={(e) => set('numeroFactura', e.target.value)} />
+            </div>
+            <div className="field c12">
               <label htmlFor="fdObs">Observaciones</label>
               <input id="fdObs" type="text" value={form.observaciones} onChange={(e) => set('observaciones', e.target.value)} />
             </div>

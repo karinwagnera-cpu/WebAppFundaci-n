@@ -20,6 +20,8 @@ export interface Registro {
   difusion?: string | null;
   horas?: number | null;
   inversion?: number | null;
+  numeroCertificado?: string | null;
+  numeroFactura?: string | null;
   fotosCount?: number;
   tieneFotos?: boolean;
   constanciaCount?: number;
@@ -66,6 +68,8 @@ export interface RegistroForm {
   horas: string;
   contacto: string;
   observaciones: string;
+  numeroCertificado: string;
+  numeroFactura: string;
   fotos: Adjunto[];
   consts: Adjunto[];
 }
