@@ -904,3 +904,26 @@
     .kpi .val{font-size:30px;}
     .save-pill{display:none;}
   }
+
+  /* ---------- Login ---------- */
+  .login-wrap{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:32px 28px;text-align:center;
+  }
+  .login-logo{
+    width:64px;height:64px;margin:0 auto 16px;border-radius:50%;border:2px solid var(--maroon);
+    background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .login-logo img{width:82%;height:82%;object-fit:contain;}
+  .login-card h1{font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--ink);margin:0 0 6px;}
+  .login-sub{font-size:13.5px;color:var(--muted);margin:0 0 22px;}
+  .login-card .field{text-align:left;margin-bottom:14px;}
+  .login-error{
+    background:var(--maroon-tint);color:var(--maroon-dark);border-radius:9px;
+    padding:9px 12px;font-size:13px;margin-bottom:14px;text-align:left;
+  }
+  .login-hint{font-size:12px;color:var(--muted);margin:16px 0 0;}

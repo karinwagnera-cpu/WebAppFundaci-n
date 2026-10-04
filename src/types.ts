@@ -84,7 +84,6 @@ export interface DocForm {
 
 export interface Prefs {
   theme: Tema;
-  role: Rol;
 }
 
 export interface Campania {

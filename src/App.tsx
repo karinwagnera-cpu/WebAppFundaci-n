@@ -2,14 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Campania, CampaniaForm, DocForm, DocMeta, Filtro, Registro, RegistroForm, Rol, Tema, Vista } from './types';
 import { SEED_REGISTROS } from './data/registros';
 import { SEED_CAMPANAS } from './data/campanas';
+import type { Session } from '@supabase/supabase-js';
 import {
   deleteAdjuntos, deleteCampaniaRemoto, deleteRegistroRemoto, descargar,
   fetchCampanasRemoto, fetchRegistrosRemoto, insertarRegistrosRemoto, loadCampanas, loadDocs, loadPrefs, loadRegistros,
   reemplazarRegistrosRemoto, saveAdjuntos, saveCampanas, saveDocs, savePrefs, saveRegistros,
   supabaseDisponible, upsertCampaniaRemoto, upsertRegistroRemoto,
 } from './lib/storage';
+import { supabase } from './lib/supabaseClient';
+import { cerrarSesion, obtenerRol } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
+import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import PerfilMenu from './components/PerfilMenu';
@@ -37,7 +41,9 @@ export default function App() {
   const [docs, setDocs] = useState<DocMeta[]>(() => loadDocs());
   const [campanas, setCampanas] = useState<Campania[]>(() => loadCampanas() ?? SEED_CAMPANAS);
   const [tema, setTema] = useState<Tema>(prefs.theme ?? 'light');
-  const [rol, setRol] = useState<Rol>(prefs.role ?? 'admin');
+  const [rol, setRol] = useState<Rol>(supabaseDisponible ? 'viewer' : 'admin');
+  const [sesion, setSesion] = useState<Session | null>(null);
+  const [cargandoSesion, setCargandoSesion] = useState(supabaseDisponible);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [perfilAbierto, setPerfilAbierto] = useState(false);
   const [guardado, setGuardado] = useState(false);
@@ -58,11 +64,31 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', tema);
     document.documentElement.setAttribute('data-role', rol);
-    savePrefs({ theme: tema, role: rol });
+    savePrefs({ theme: tema });
   }, [tema, rol]);
 
   useEffect(() => {
+    if (!supabaseDisponible || !supabase) { setCargandoSesion(false); return; }
+    supabase.auth.getSession().then(({ data }) => {
+      setSesion(data.session);
+      setCargandoSesion(false);
+    });
+    const { data: suscripcion } = supabase.auth.onAuthStateChange((_evento, nuevaSesion) => {
+      setSesion(nuevaSesion);
+    });
+    return () => suscripcion.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (!supabaseDisponible) return;
+    if (!sesion) { setRol('viewer'); return; }
+    let cancelado = false;
+    obtenerRol(sesion.user.id).then((r) => { if (!cancelado) setRol(r); });
+    return () => { cancelado = true; };
+  }, [sesion]);
+
+  useEffect(() => {
+    if (!supabaseDisponible || !sesion) return;
     let cancelado = false;
     (async () => {
       try {
@@ -79,7 +105,7 @@ export default function App() {
       }
     })();
     return () => { cancelado = true; };
-  }, []);
+  }, [sesion]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -365,6 +391,9 @@ export default function App() {
   const irA = (v: Vista) => { setVista(v); setMenuAbierto(false); setPerfilAbierto(false); };
   const detalle = detalleId ? registros.find((r) => r.id === detalleId) ?? null : null;
 
+  if (supabaseDisponible && cargandoSesion) return null;
+  if (supabaseDisponible && !sesion) return <Login />;
+
   return (
     <div id="app" className={menuAbierto ? 'sidebar-open' : ''}>
       <Sidebar
@@ -387,7 +416,16 @@ export default function App() {
         />
 
         {perfilAbierto && (
-          <PerfilMenu rol={rol} onRol={setRol} onBackup={backup} onImportar={importar} onReset={reiniciar} />
+          <PerfilMenu
+            rol={rol}
+            email={sesion?.user.email ?? null}
+            puedeEditar={puedeEditar}
+            mostrarSesion={supabaseDisponible}
+            onCerrarSesion={cerrarSesion}
+            onBackup={backup}
+            onImportar={importar}
+            onReset={reiniciar}
+          />
         )}
 
         <div className="content">
