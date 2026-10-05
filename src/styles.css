@@ -334,12 +334,12 @@
     color:var(--ink);
   }
   .searchbox{
-    display:flex;align-items:center;gap:9px;
+    display:flex;align-items:center;gap:8px;
     background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius-pill);
-    box-shadow:var(--shadow-soft);padding:9px 16px;flex:1;min-width:200px;max-width:260px;
+    box-shadow:var(--shadow-soft);padding:7px 14px;flex:1;min-width:200px;max-width:260px;
   }
-  .searchbox svg.icon{color:var(--muted);}
-  .searchbox input{border:none;padding:0;flex:1;background:transparent;}
+  .searchbox svg.icon{color:var(--muted);width:15px;height:15px;}
+  .searchbox input{border:none;padding:0;flex:1;background:transparent;font-size:11.5px;}
   .searchbox input:focus{outline:none;}
 
   select:focus, input:focus, textarea:focus, button:focus-visible{
@@ -810,7 +810,7 @@
   .cal-nav{display:flex;align-items:center;gap:10px;}
   .cal-period{font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--ink);min-width:190px;text-transform:capitalize;}
   .cal-viewtoggle{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px;}
-  .cal-vt{border:none;background:none;cursor:pointer;padding:8px 16px;border-radius:8px;font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--ink-soft);transition:background .12s ease,color .12s ease;}
+  .cal-vt{border:none;background:none;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:var(--font-display);font-weight:700;font-size:11.5px;color:var(--ink-soft);transition:background .12s ease,color .12s ease;}
   .cal-vt.active{background:var(--maroon);color:#fff;}
 
   .cal-month{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-soft);overflow:hidden;}
