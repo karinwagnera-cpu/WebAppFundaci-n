@@ -197,13 +197,13 @@
   .save-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--sage);}
 
   .profile-btn{
-    width:42px;height:42px;border-radius:50%;border:1px solid var(--line-strong);
-    background:var(--panel);cursor:pointer;padding:0;flex-shrink:0;
+    width:42px;height:42px;min-width:42px;min-height:42px;border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--panel);cursor:pointer;padding:0;flex-shrink:0;overflow:hidden;
     display:flex;align-items:center;justify-content:center;transition:border-color .15s ease;
   }
   .profile-btn:hover{border-color:var(--maroon);}
   .icon-btn{
-    width:42px;height:42px;border-radius:11px;border:1px solid var(--line-strong);
+    width:42px;height:42px;min-width:42px;min-height:42px;border-radius:11px;border:1px solid var(--line-strong);
     background:var(--panel);cursor:pointer;padding:0;flex-shrink:0;color:var(--ink-soft);
     display:flex;align-items:center;justify-content:center;transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
