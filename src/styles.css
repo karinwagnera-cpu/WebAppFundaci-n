@@ -86,7 +86,7 @@
     background:var(--bg);
     color:var(--ink);
     font-family:var(--font-body);
-    font-size:14px;
+    font-size:13px;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
     transition:background .3s ease, color .3s ease;
@@ -474,14 +474,14 @@
   /* ---------- Table ---------- */
   .table-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
   .table-card{background:var(--panel);border-radius:var(--radius-card);box-shadow:var(--shadow-card);overflow:hidden;}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
   thead th{
-    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;
     color:var(--muted);font-weight:700;
-    padding:12px 14px;border-bottom:1px solid var(--line-strong);
+    padding:10px 14px;border-bottom:1px solid var(--line-strong);
     white-space:nowrap;
   }
-  tbody td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover{background:var(--maroon-tint);}
   td.num{text-align:right;font-variant-numeric:tabular-nums;}
@@ -776,7 +776,7 @@
   .rd-tabletitle{margin-top:26px;margin-bottom:12px;}
 
   .rep-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;table-layout:fixed;}
-  .rep-table th, .rep-table td{padding:12px 22px;font-size:13.5px;}
+  .rep-table th, .rep-table td{padding:12px 22px;font-size:12.5px;}
   .rep-table th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;text-align:left;border-bottom:1px solid var(--line);}
   .rep-table th.num, .rep-table td.num{text-align:right;font-variant-numeric:tabular-nums;}
   .rep-table td{border-bottom:1px solid var(--line);color:var(--ink);}
