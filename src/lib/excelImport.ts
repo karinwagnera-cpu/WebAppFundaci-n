@@ -1,5 +1,5 @@
-import type { Registro } from '../types';
-import { EJES, TIPOS } from './constants';
+import type { EstadoAccion, Registro } from '../types';
+import { EJES, ESTADOS_ACCION, TIPOS } from './constants';
 import { descargar } from './storage';
 
 /** Mismas columnas que exportarRegistrosCsv (sin ID: los importados son registros nuevos). */
@@ -10,17 +10,21 @@ export const PLANTILLA_HEADERS = [
   'N° de certificado', 'N° de factura', 'Observaciones',
 ];
 
+/** Columna opcional: si se omite (o viene vacía), la fila se importa como "Realizada". */
+const HEADER_ESTADO = 'Estado';
+
 const FILA_EJEMPLO = [
   '2026-03-15', 'Donación realizada', 'INFANCIA Y EDUCACIÓN', '',
   'Fundación', 'Escuela N°12', '20 mochilas', 'Kits escolares para inicio de clases',
-  '150000', '0', '', 'María Pérez', '', '', '',
+  '150000', '0', '', 'María Pérez', '', '', '', 'Realizada',
 ];
 
 // Se importa dinámicamente: xlsx pesa ~500KB y solo lo necesita el admin al importar/exportar plantillas.
 export async function descargarPlantillaExcel(): Promise<void> {
   const XLSX = await import('xlsx');
-  const hoja = XLSX.utils.aoa_to_sheet([PLANTILLA_HEADERS, FILA_EJEMPLO]);
-  hoja['!cols'] = PLANTILLA_HEADERS.map(() => ({ wch: 26 }));
+  const encabezados = [...PLANTILLA_HEADERS, HEADER_ESTADO];
+  const hoja = XLSX.utils.aoa_to_sheet([encabezados, FILA_EJEMPLO]);
+  hoja['!cols'] = encabezados.map(() => ({ wch: 26 }));
   const libro = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(libro, hoja, 'Registros');
   const buffer = XLSX.write(libro, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
@@ -115,12 +119,12 @@ export async function parseExcelRegistros(file: File, proximoId: number): Promis
 
     const fechaRes = normalizarFecha(get('Fecha'));
     if (!fechaRes.ok) problemas.push(`"Fecha" inválida: "${get('Fecha')}"`);
-    else if (fechaRes.valor) {
-      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      const d = new Date(fechaRes.valor + 'T00:00:00');
-      if (d > hoy) problemas.push('"Fecha" no puede ser futura');
-      if (d.getFullYear() < 2014) problemas.push('"Fecha" no puede ser anterior a 2014');
+    else if (fechaRes.valor && new Date(fechaRes.valor + 'T00:00:00').getFullYear() < 2014) {
+      problemas.push('"Fecha" no puede ser anterior a 2014');
     }
+
+    const estadoRaw = columna('Estado') ? String(get('Estado') ?? '').trim() : '';
+    const estado = (estadoRaw ? matchLista(estadoRaw, ESTADOS_ACCION) : null) as EstadoAccion | null ?? 'realizada';
 
     const costoRes = numeroOpcional(get('Costo interno (ARS)'));
     if (!costoRes.ok || (costoRes.valor !== null && costoRes.valor < 0)) problemas.push('"Costo interno (ARS)" inválido');
@@ -151,6 +155,7 @@ export async function parseExcelRegistros(file: File, proximoId: number): Promis
       numeroCertificado: String(get('N° de certificado') ?? '').trim() || null,
       numeroFactura: String(get('N° de factura') ?? '').trim() || null,
       observaciones: String(get('Observaciones') ?? '').trim() || null,
+      estado,
       fotosCount: 0,
       tieneFotos: false,
       constanciaCount: 0,

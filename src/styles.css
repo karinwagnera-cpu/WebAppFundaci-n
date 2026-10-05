@@ -508,6 +508,11 @@
     box-shadow:-6px 0 8px -6px rgba(0,0,0,0.12);
   }
   .table-scroll.reg tbody tr:hover td:last-child{background:var(--maroon-tint);}
+  /* Las columnas fijas (Fila/Acciones) también deben tomar el tinte de fila
+     seleccionada; si no, al hacer scroll horizontal quedan con el fondo
+     normal superpuesto sobre el resto de la fila ya teñida. */
+  .table-scroll.reg tbody tr.row-selected td:first-child,
+  .table-scroll.reg tbody tr.row-selected td:last-child{background:var(--maroon-tint);}
   .table-scroll.reg th:first-child{z-index:3;}
   .scroll-hint{
     display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);
@@ -598,6 +603,8 @@
   .estado-badge.estado-planificada{background:var(--gold-tint);color:#7A5A22;}
   .estado-dot.estado-finalizada{background:var(--taupe);}
   .estado-badge.estado-finalizada{background:var(--taupe-tint);color:var(--ink-soft);}
+  .estado-dot.estado-cancelada{background:#C0392B;}
+  .estado-badge.estado-cancelada{background:var(--maroon-tint);color:var(--maroon-dark);text-decoration:line-through;}
 
   .camp-nombre{font-weight:700;color:var(--ink);}
   .camp-desc{font-size:12px;color:var(--muted);margin-top:2px;max-width:280px;}
@@ -644,8 +651,26 @@
   .detail-media-section{display:flex;flex-direction:column;gap:8px;}
   .detail-media-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;}
   .detail-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
-  .detail-photos img{width:100%;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;transition:transform .12s ease;}
-  .detail-photos img:hover{transform:scale(1.03);}
+  .foto-thumb{
+    display:flex;flex-direction:column;gap:4px;border:none;background:none;padding:0;
+    cursor:pointer;font:inherit;text-align:left;width:100%;min-width:0;
+  }
+  .foto-thumb img{width:100%;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;transition:transform .12s ease;}
+  .foto-thumb:hover img{transform:scale(1.03);}
+  .foto-name{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .lightbox{
+    position:fixed;inset:0;z-index:300;background:rgba(20,15,10,0.88);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:40px 20px;cursor:zoom-out;
+  }
+  .lightbox img{max-width:90vw;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.4);cursor:default;}
+  .lightbox-caption{color:#fff;font-size:13px;opacity:0.85;max-width:90vw;text-align:center;word-break:break-word;}
+  .lightbox-close{
+    position:fixed;top:20px;right:24px;background:rgba(255,255,255,0.12);border:none;color:#fff;
+    width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer;
+  }
+  .lightbox-close:hover{background:rgba(255,255,255,0.22);}
   .detail-const{display:flex;flex-wrap:wrap;gap:8px;}
   .detail-const a{display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--ink);text-decoration:none;font-weight:600;}
   .detail-const a:hover{border-color:var(--maroon);color:var(--maroon);}
@@ -686,13 +711,14 @@
   }
   .attach-chip .thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--taupe-tint);}
   .attach-chip .thumb.doc{display:flex;align-items:center;justify-content:center;color:var(--maroon);}
-  .attach-chip .meta{min-width:0;}
+  .attach-chip .meta{min-width:0;display:flex;flex-direction:column;gap:1px;}
   .attach-chip .fname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;font-weight:600;color:var(--ink-soft);}
   .attach-chip .fsize{color:var(--muted);font-size:11px;}
   .attach-chip button{background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;flex-shrink:0;}
   .attach-chip button:hover{color:#A6432E;}
   .attach-btn{cursor:pointer;}
   .attach-btn input{position:absolute;left:-9999px;}
+  .attach-btn.disabled{opacity:0.6;cursor:not-allowed;}
 
   .doc-name-cell{display:flex;align-items:center;gap:10px;}
   .doc-icon{width:34px;height:34px;border-radius:8px;background:var(--maroon-tint);color:var(--maroon-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -794,12 +820,25 @@
   .cal-cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden;}
   .cal-cell:nth-child(7n){border-right:none;}
   .cal-cell.other{background:var(--panel-2);opacity:.55;}
+  .cal-cell.clickable{cursor:pointer;}
+  .cal-cell.clickable:hover{background:var(--panel-2);}
+  .cal-cell.clickable.other:hover{background:var(--panel-2);}
   .cal-cell .cal-daynum{font-size:12px;font-weight:700;color:var(--ink-soft);align-self:flex-end;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
   .cal-cell.today .cal-daynum{background:var(--maroon);color:#fff;}
   .cal-ev{font-size:10.5px;line-height:1.2;padding:3px 6px;border-radius:5px;color:#fff;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
   .cal-ev:hover{opacity:.88;}
   .cal-more{font-size:10px;color:var(--muted);font-weight:700;cursor:pointer;padding:1px 6px;}
   .cal-more:hover{color:var(--maroon);}
+
+  /* El mes no debe scrollear verticalmente: la vista ocupa exactamente el alto
+     disponible de .content (que ya tiene su propio scroll para el resto de
+     vistas) y la grilla reparte esa altura entre sus filas fijas en vez de
+     crecer más allá de la pantalla. */
+  section.view.cal-fit{display:flex;flex-direction:column;height:100%;}
+  .cal-fit .cal-month{flex:1;min-height:0;display:flex;flex-direction:column;}
+  .cal-fit .cal-weekdays, .cal-fit .cal-legend{flex-shrink:0;}
+  .cal-fit .cal-grid{flex:1;min-height:0;}
+  .cal-fit .cal-cell{min-height:0;}
 
   /* colores por eje */
   .eje-infancia{background:#6E1F32;}
@@ -809,7 +848,7 @@
   .eje-empleabilidad{background:#A6624B;}
   .eje-otro{background:#9C9284;}
 
-  .cal-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;padding:0 2px;}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:14px;padding:14px 16px 18px;}
   .cal-legend .lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft);}
   .cal-legend .lg .sw{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
 

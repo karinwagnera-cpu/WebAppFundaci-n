@@ -4,15 +4,16 @@ import { SEED_REGISTROS } from './data/registros';
 import { SEED_CAMPANAS } from './data/campanas';
 import type { Session } from '@supabase/supabase-js';
 import {
-  deleteAdjuntos, deleteCampaniaRemoto, deleteRegistroRemoto, descargar,
+  deleteCampaniaRemoto, deleteRegistroRemoto, descargar, eliminarAdjuntosStorage,
   fetchCampanasRemoto, fetchRegistrosRemoto, insertarRegistrosRemoto, loadCampanas, loadDocs, loadPrefs, loadRegistros,
-  reemplazarRegistrosRemoto, saveAdjuntos, saveCampanas, saveDocs, savePrefs, saveRegistros,
+  reemplazarRegistrosRemoto, saveCampanas, saveDocs, savePrefs, saveRegistros,
   supabaseDisponible, upsertCampaniaRemoto, upsertRegistroRemoto,
 } from './lib/storage';
 import { supabase } from './lib/supabaseClient';
 import { cerrarSesion, obtenerRol } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
+import { mensajeError } from './lib/format';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -55,7 +56,7 @@ export default function App() {
   const [busqueda, setBusqueda] = useState('');
 
   const [detalleId, setDetalleId] = useState<number | null>(null);
-  const [editando, setEditando] = useState<{ registro: Registro | null } | null>(null);
+  const [editando, setEditando] = useState<{ registro: Registro | null; fechaInicial?: string } | null>(null);
   const [editandoCampania, setEditandoCampania] = useState<{ campania: Campania | null } | null>(null);
   const [docModal, setDocModal] = useState(false);
 
@@ -179,7 +180,7 @@ export default function App() {
     try {
       await upsertCampaniaRemoto(camp);
     } catch (err) {
-      alert('No se pudo guardar la campaña en la base compartida: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo guardar la campaña en la base compartida: ' + mensajeError(err));
       return;
     }
     persistirCampanas(form.editingId ? campanas.map((c) => (c.id === id ? camp : c)) : [...campanas, camp]);
@@ -191,7 +192,7 @@ export default function App() {
     try {
       await deleteCampaniaRemoto(id);
     } catch (err) {
-      alert('No se pudo eliminar la campaña: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo eliminar la campaña: ' + mensajeError(err));
       return;
     }
     persistirCampanas(campanas.filter((c) => c.id !== id));
@@ -211,14 +212,9 @@ export default function App() {
 
     const errores: string[] = [];
     if (form.fecha) {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
       const d = new Date(form.fecha + 'T00:00:00');
       if (Number.isNaN(d.getTime())) errores.push('La fecha no es válida.');
-      else {
-        if (d > hoy) errores.push('La fecha no puede ser futura.');
-        if (d.getFullYear() < 2014) errores.push('La fecha no puede ser anterior a 2014 (año de inicio de la Fundación).');
-      }
+      else if (d.getFullYear() < 2014) errores.push('La fecha no puede ser anterior a 2014 (año de inicio de la Fundación).');
     }
     if (form.costo !== '' && Number(form.costo) < 0) errores.push('El costo interno no puede ser negativo.');
     if (form.inversion !== '' && Number(form.inversion) < 0) errores.push('La inversión no puede ser negativa.');
@@ -258,6 +254,9 @@ export default function App() {
       observaciones: form.observaciones.trim(),
       numeroCertificado: form.numeroCertificado.trim() || null,
       numeroFactura: form.numeroFactura.trim() || null,
+      estado: form.estado,
+      fotos: form.fotos,
+      consts: form.consts,
       fotosCount: form.fotos.length,
       tieneFotos: form.fotos.length > 0,
       constanciaCount: form.consts.length,
@@ -266,23 +265,23 @@ export default function App() {
     try {
       await upsertRegistroRemoto(rec);
     } catch (err) {
-      alert('No se pudo guardar el registro en la base compartida: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo guardar el registro en la base compartida: ' + mensajeError(err));
       return;
     }
-    saveAdjuntos(id, { fotos: form.fotos, consts: form.consts });
     persistirRegistros(form.editingId ? registros.map((r) => (r.id === id ? rec : r)) : [...registros, rec]);
     setEditando(null);
   };
 
   const eliminarRegistro = async (id: number) => {
     if (!confirm('Se eliminará este registro y su documentación adjunta. Esta acción no se puede deshacer.')) return;
+    const registro = registros.find((r) => r.id === id);
     try {
       await deleteRegistroRemoto(id);
     } catch (err) {
-      alert('No se pudo eliminar el registro: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo eliminar el registro: ' + mensajeError(err));
       return;
     }
-    deleteAdjuntos(id);
+    if (registro) await eliminarAdjuntosStorage([...(registro.fotos ?? []), ...(registro.consts ?? [])]);
     persistirRegistros(registros.filter((r) => r.id !== id));
     setEditando(null);
   };
@@ -336,7 +335,7 @@ export default function App() {
       } catch (err) {
         alert(err instanceof Error && err.message === 'formato'
           ? 'El archivo no parece una copia de seguridad válida.'
-          : 'No se pudo importar en la base compartida: ' + (err instanceof Error ? err.message : String(err)));
+          : 'No se pudo importar en la base compartida: ' + mensajeError(err));
       }
     };
     rd.readAsText(file);
@@ -347,7 +346,7 @@ export default function App() {
     try {
       await reemplazarRegistrosRemoto(SEED_REGISTROS);
     } catch (err) {
-      alert('No se pudo reiniciar la base compartida: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo reiniciar la base compartida: ' + mensajeError(err));
       return;
     }
     persistirRegistros(SEED_REGISTROS);
@@ -360,7 +359,7 @@ export default function App() {
     try {
       resultado = await parseExcelRegistros(file, proximoId);
     } catch (err) {
-      alert('No se pudo leer el archivo: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo leer el archivo: ' + mensajeError(err));
       return;
     }
     const { validos, errores } = resultado;
@@ -381,7 +380,7 @@ export default function App() {
     try {
       await insertarRegistrosRemoto(validos);
     } catch (err) {
-      alert('No se pudo importar en la base compartida: ' + (err instanceof Error ? err.message : String(err)));
+      alert('No se pudo importar en la base compartida: ' + mensajeError(err));
       return;
     }
     persistirRegistros([...registros, ...validos]);
@@ -454,7 +453,14 @@ export default function App() {
               onEditar={(id) => setEditandoCampania({ campania: campanas.find((c) => c.id === id) ?? null })}
             />
           )}
-          {vista === 'calendario' && <Calendario registros={registros} onVer={setDetalleId} />}
+          {vista === 'calendario' && (
+            <Calendario
+              registros={registros}
+              onVer={setDetalleId}
+              puedeEditar={puedeEditar}
+              onNuevoEnFecha={(fecha) => setEditando({ registro: null, fechaInicial: fecha })}
+            />
+          )}
           {vista === 'analitica' && (
             <Analitica registros={registros} campanas={campanas} filtro={fRep} onFiltro={setFRep} tema={tema} />
           )}
@@ -499,6 +505,7 @@ export default function App() {
       {editando && puedeEditar && (
         <RegistroModal
           registro={editando.registro}
+          fechaInicial={editando.fechaInicial}
           onGuardar={guardarRegistro}
           onEliminar={eliminarRegistro}
           onCerrar={() => setEditando(null)}

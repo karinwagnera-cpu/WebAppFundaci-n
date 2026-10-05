@@ -19,8 +19,9 @@ npm run typecheck  # solo chequeo de tipos
 - TypeScript 5.7 en modo `strict`
 - Vite 6
 - Chart.js 4 (mismos gráficos que el original)
-- **Registros y campañas: Supabase (Postgres)**, compartidos entre todos los usuarios. Sin autenticación todavía: las tablas tienen RLS habilitada con una policy abierta al rol `anon` (cualquiera con la URL/anon key puede leer y escribir). Es el paso previo a agregar Supabase Auth.
-- Documentos, adjuntos y preferencias siguen en `localStorage` (por ahora locales a cada dispositivo).
+- **Registros y campañas: Supabase (Postgres)**, compartidos entre todos los usuarios. Login con Supabase Auth (email + contraseña); RLS exige sesión iniciada para leer, y rol "admin" (tabla `perfiles`) para escribir.
+- **Fotos, flyers y constancias de cada acción: Supabase Storage** (bucket `adjuntos`, público para mostrarlas con una URL directa; solo un admin autenticado puede subir/borrar), compartidos entre todos los usuarios.
+- Documentos de la sección Documentación y preferencias siguen en `localStorage` (por ahora locales a cada dispositivo).
 - Si `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` no están configuradas, la app sigue funcionando con la copia local (`localStorage`) en modo sin conexión.
 
 ## Estructura

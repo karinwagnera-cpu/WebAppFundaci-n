@@ -2,6 +2,15 @@ import { EJE_CLASE, MESES } from './constants';
 
 const nf = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
+/** Los errores de Supabase (PostgrestError) no son instancias de Error: son objetos planos con .message. */
+export function mensajeError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+    return (err as { message: string }).message;
+  }
+  return String(err);
+}
+
 export const fmtMoney = (n: number | null | undefined): string => '$ ' + nf.format(Math.round(n || 0));
 export const fmtInt = (n: number | null | undefined): string => nf.format(n || 0);
 

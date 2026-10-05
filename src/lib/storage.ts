@@ -1,11 +1,11 @@
-import type { Adjunto, Campania, DocMeta, Prefs, Registro } from '../types';
+import type { Adjunto, ArchivoLeido, Campania, DocMeta, Prefs, Registro } from '../types';
+import { normalizarEstadoAccion } from './constants';
 import { supabase } from './supabaseClient';
 
 const KEY_REGISTROS = 'fh_registros';
 const KEY_DOCS = 'fh_docs';
 const KEY_CAMPANAS = 'fh_campanas';
 const KEY_PREFS = 'fh_prefs';
-const KEY_ADJ = (id: number) => `fh_adj_${id}`;
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -51,16 +51,6 @@ export const saveCampanas = (camps: Campania[]): boolean => write(KEY_CAMPANAS, 
 export const loadPrefs = (): Partial<Prefs> => read<Partial<Prefs>>(KEY_PREFS, {});
 export const savePrefs = (prefs: Prefs): boolean => write(KEY_PREFS, prefs);
 
-export interface Adjuntos {
-  fotos: Adjunto[];
-  consts: Adjunto[];
-}
-export const loadAdjuntos = (id: number): Adjuntos => read<Adjuntos>(KEY_ADJ(id), { fotos: [], consts: [] });
-export const saveAdjuntos = (id: number, adj: Adjuntos): boolean => write(KEY_ADJ(id), adj);
-export const deleteAdjuntos = (id: number): void => {
-  try { localStorage.removeItem(KEY_ADJ(id)); } catch { /* sin storage */ }
-};
-
 export function descargar(blob: Blob, nombre: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -72,12 +62,14 @@ export function descargar(blob: Blob, nombre: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** Tope por archivo: localStorage suele tener 5-10MB de cupo total por sitio, y guardamos en base64 (~33% más pesado). */
-export const MAX_ATTACH_BYTES = 4.3 * 1024 * 1024;
+/** Tope por archivo subido al bucket de adjuntos. */
+export const MAX_ATTACH_BYTES = 15 * 1024 * 1024;
 
 // --- Datos compartidos (Supabase) ---------------------------------------
-// registros y campañas viven en Postgres para que todos los usuarios vean
-// lo mismo; localStorage queda solo como caché de lectura sin conexión.
+// registros y campañas viven en Postgres, y las fotos/flyers/constancias en
+// Supabase Storage (bucket "adjuntos"), para que todos los usuarios vean lo
+// mismo desde cualquier dispositivo; localStorage queda solo como caché de
+// lectura sin conexión.
 export { supabaseDisponible } from './supabaseClient';
 
 interface RegistroRow {
@@ -99,6 +91,9 @@ interface RegistroRow {
   inversion: number | null;
   numero_certificado: string | null;
   numero_factura: string | null;
+  estado: string | null;
+  fotos: Adjunto[] | null;
+  consts: Adjunto[] | null;
   fotos_count: number;
   tiene_fotos: boolean;
   constancia_count: number;
@@ -124,6 +119,9 @@ const registroDesdeFila = (row: RegistroRow): Registro => ({
   inversion: row.inversion,
   numeroCertificado: row.numero_certificado,
   numeroFactura: row.numero_factura,
+  estado: normalizarEstadoAccion(row.estado),
+  fotos: row.fotos ?? [],
+  consts: row.consts ?? [],
   fotosCount: row.fotos_count,
   tieneFotos: row.tiene_fotos,
   constanciaCount: row.constancia_count,
@@ -149,6 +147,9 @@ const filaDesdeRegistro = (r: Registro): RegistroRow => ({
   inversion: r.inversion ?? null,
   numero_certificado: r.numeroCertificado ?? null,
   numero_factura: r.numeroFactura ?? null,
+  estado: normalizarEstadoAccion(r.estado),
+  fotos: r.fotos ?? [],
+  consts: r.consts ?? [],
   fotos_count: r.fotosCount ?? 0,
   tiene_fotos: r.tieneFotos ?? false,
   constancia_count: r.constanciaCount ?? 0,
@@ -252,9 +253,33 @@ export async function deleteCampaniaRemoto(id: number): Promise<void> {
   if (error) throw error;
 }
 
-export function leerArchivo(file: File): Promise<Adjunto> {
+const BUCKET_ADJUNTOS = 'adjuntos';
+
+/** Sube un archivo al bucket compartido de Storage y devuelve su URL pública. */
+export async function subirAdjunto(file: File, carpeta: 'fotos' | 'consts'): Promise<Adjunto> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  if (file.size > MAX_ATTACH_BYTES) {
+    throw new Error(`"${file.name}" pesa más de ${Math.round(MAX_ATTACH_BYTES / 1024 / 1024)} MB. Elegí un archivo más liviano.`);
+  }
+  const limpio = file.name.replace(/[^\w.-]+/g, '_');
+  const path = `${carpeta}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${limpio}`;
+  const { error } = await supabase.storage.from(BUCKET_ADJUNTOS).upload(path, file, { contentType: file.type });
+  if (error) throw new Error(`No se pudo subir "${file.name}": ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_ADJUNTOS).getPublicUrl(path);
+  return { name: file.name, type: file.type, size: file.size, url: data.publicUrl, path };
+}
+
+/** Borra del bucket los adjuntos de un registro eliminado; los errores no bloquean el borrado del registro. */
+export async function eliminarAdjuntosStorage(adjuntos: Adjunto[]): Promise<void> {
+  if (!supabase || !adjuntos.length) return;
+  try { await supabase.storage.from(BUCKET_ADJUNTOS).remove(adjuntos.map((a) => a.path)); } catch { /* no bloquea */ }
+}
+
+/** Documentación sigue en localStorage: lee el archivo como data URL, con el tope de espacio del navegador. */
+const MAX_DOC_BYTES = 4.3 * 1024 * 1024;
+export function leerArchivoLocal(file: File): Promise<ArchivoLeido> {
   return new Promise((resolve, reject) => {
-    if (file.size > MAX_ATTACH_BYTES) {
+    if (file.size > MAX_DOC_BYTES) {
       reject(new Error(`"${file.name}" pesa más de 4.3 MB. Elegí un archivo más liviano.`));
       return;
     }

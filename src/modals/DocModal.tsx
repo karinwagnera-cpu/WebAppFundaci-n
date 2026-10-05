@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DocForm } from '../types';
 import { DOC_CATEGORIAS } from '../lib/constants';
-import { leerArchivo } from '../lib/storage';
+import { leerArchivoLocal } from '../lib/storage';
 
 interface Props {
   onGuardar: (form: DocForm) => void;
@@ -17,7 +17,7 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
     const file = files?.[0];
     if (!file) return;
     try {
-      const adj = await leerArchivo(file);
+      const adj = await leerArchivoLocal(file);
       setForm((f) => ({ ...f, file: adj, nombre: f.nombre || file.name.replace(/\.[^.]+$/, '') }));
     } catch (err) {
       alert(err instanceof Error ? err.message : 'No se pudo cargar el archivo.');

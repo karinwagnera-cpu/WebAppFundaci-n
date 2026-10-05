@@ -1,22 +1,24 @@
 import { useState } from 'react';
-import type { Adjunto, Registro, RegistroForm } from '../types';
-import { EJES, TIPOS, UNIDADES } from '../lib/constants';
+import type { Registro, RegistroForm } from '../types';
+import { EJES, ESTADOS_ACCION, ESTADO_ACCION_LABEL, TIPOS, UNIDADES, normalizarEstadoAccion } from '../lib/constants';
 import { humanSize, parseUnidades, tituloEje } from '../lib/format';
-import { leerArchivo, loadAdjuntos } from '../lib/storage';
+import { subirAdjunto } from '../lib/storage';
 import Icon from '../components/Icon';
 
 interface Props {
   registro: Registro | null;
+  fechaInicial?: string;
   onGuardar: (form: RegistroForm) => void;
   onEliminar: (id: number) => void;
   onCerrar: () => void;
 }
 
-const vacio = (r: Registro | null): RegistroForm => {
-  const adj = r ? loadAdjuntos(r.id) : { fotos: [], consts: [] };
+const vacio = (r: Registro | null, fechaInicial?: string): RegistroForm => {
+  const fecha = r?.fecha ?? fechaInicial ?? '';
+  const hoyISO = new Date().toISOString().slice(0, 10);
   return {
     editingId: r ? r.id : null,
-    fecha: r?.fecha ?? '',
+    fecha,
     tipo: r?.tipo ?? TIPOS[0],
     eje: r?.eje ?? EJES[0],
     ejeSecundario: r?.ejeSecundario ?? '',
@@ -31,25 +33,31 @@ const vacio = (r: Registro | null): RegistroForm => {
     observaciones: r?.observaciones ?? '',
     numeroCertificado: r?.numeroCertificado ?? '',
     numeroFactura: r?.numeroFactura ?? '',
-    fotos: adj.fotos,
-    consts: adj.consts,
+    estado: r ? normalizarEstadoAccion(r.estado) : (fecha > hoyISO ? 'planificada' : 'realizada'),
+    fotos: r?.fotos ?? [],
+    consts: r?.consts ?? [],
   };
 };
 
-export default function RegistroModal({ registro, onGuardar, onEliminar, onCerrar }: Props) {
-  const [form, setForm] = useState<RegistroForm>(() => vacio(registro));
+export default function RegistroModal({ registro, fechaInicial, onGuardar, onEliminar, onCerrar }: Props) {
+  const [form, setForm] = useState<RegistroForm>(() => vacio(registro, fechaInicial));
+  const [subiendo, setSubiendo] = useState<'fotos' | 'consts' | null>(null);
   const set = <K extends keyof RegistroForm>(key: K, value: RegistroForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
   const agregar = async (key: 'fotos' | 'consts', files: FileList | null) => {
     if (!files || !files.length) return;
-    const leidos: Adjunto[] = [];
+    setSubiendo(key);
     const errores: string[] = [];
     for (const file of Array.from(files)) {
-      try { leidos.push(await leerArchivo(file)); }
-      catch (err) { errores.push(err instanceof Error ? err.message : `No se pudo cargar "${file.name}".`); }
+      try {
+        const subido = await subirAdjunto(file, key);
+        setForm((f) => ({ ...f, [key]: [...f[key], subido] }));
+      } catch (err) {
+        errores.push(err instanceof Error ? err.message : `No se pudo subir "${file.name}".`);
+      }
     }
-    if (leidos.length) setForm((f) => ({ ...f, [key]: [...f[key], ...leidos] }));
+    setSubiendo(null);
     if (errores.length) alert(errores.join('\n'));
   };
   const quitar = (key: 'fotos' | 'consts', idx: number) =>
@@ -65,7 +73,7 @@ export default function RegistroModal({ registro, onGuardar, onEliminar, onCerra
       {form[key].map((a, i) => (
         <span key={i} className="attach-chip">
           {a.type.startsWith('image/')
-            ? <img className="thumb" src={a.data} alt="" />
+            ? <img className="thumb" src={a.url} alt="" />
             : <span className="thumb doc"><Icon name="file" size={16} /></span>}
           <span className="meta">
             <span className="fname">{a.name}</span>
@@ -88,6 +96,13 @@ export default function RegistroModal({ registro, onGuardar, onEliminar, onCerra
             <div className="field c3">
               <label htmlFor="fdFecha">Fecha *</label>
               <input id="fdFecha" type="date" value={form.fecha} onChange={(e) => set('fecha', e.target.value)} />
+            </div>
+            <div className="field c3">
+              <label htmlFor="fdEstado">Estado</label>
+              <select id="fdEstado" value={form.estado} onChange={(e) => set('estado', e.target.value as typeof form.estado)}>
+                {ESTADOS_ACCION.map((e) => <option key={e} value={e}>{ESTADO_ACCION_LABEL[e]}</option>)}
+              </select>
+              <div className="hint">Planificada: todavía no sucedió.</div>
             </div>
             <div className="field c3">
               <label htmlFor="fdTipo">Tipo de movimiento *</label>
@@ -187,18 +202,18 @@ export default function RegistroModal({ registro, onGuardar, onEliminar, onCerra
               <label className="attach-label">Registro fotográfico / flyers</label>
               <div className="hint" style={{ marginBottom: 8 }}>Fotos de la acción, del evento o material de difusión.</div>
               {chips('fotos')}
-              <label className="btn secondary small attach-btn">
-                <Icon name="upload" /> Agregar imagen
-                <input type="file" accept="image/*" multiple onChange={(e) => agregar('fotos', e.target.files)} />
+              <label className={'btn secondary small attach-btn' + (subiendo === 'fotos' ? ' disabled' : '')}>
+                <Icon name="upload" /> {subiendo === 'fotos' ? 'Subiendo…' : 'Agregar imagen'}
+                <input type="file" accept="image/*" multiple disabled={!!subiendo} onChange={(e) => agregar('fotos', e.target.files)} />
               </label>
             </div>
             <div className="attach-section c6">
               <label className="attach-label">Constancia de donación firmada</label>
               <div className="hint" style={{ marginBottom: 8 }}>Documento firmado por Fundación y beneficiario (imagen o PDF).</div>
               {chips('consts')}
-              <label className="btn secondary small attach-btn">
-                <Icon name="upload" /> Agregar constancia
-                <input type="file" accept="image/*,application/pdf" multiple onChange={(e) => agregar('consts', e.target.files)} />
+              <label className={'btn secondary small attach-btn' + (subiendo === 'consts' ? ' disabled' : '')}>
+                <Icon name="upload" /> {subiendo === 'consts' ? 'Subiendo…' : 'Agregar constancia'}
+                <input type="file" accept="image/*,application/pdf" multiple disabled={!!subiendo} onChange={(e) => agregar('consts', e.target.files)} />
               </label>
             </div>
           </div>

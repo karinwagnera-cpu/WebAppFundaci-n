@@ -30,6 +30,17 @@ export const ESTADO_LABEL: Record<string, string> = {
   finalizada: 'Finalizada',
 };
 
+export const ESTADOS_ACCION = ['realizada', 'planificada', 'cancelada'] as const;
+
+export const ESTADO_ACCION_LABEL: Record<string, string> = {
+  realizada: 'Realizada',
+  planificada: 'Planificada',
+  cancelada: 'Cancelada',
+};
+
+export const normalizarEstadoAccion = (v: unknown): (typeof ESTADOS_ACCION)[number] =>
+  (ESTADOS_ACCION as readonly string[]).includes(v as string) ? (v as (typeof ESTADOS_ACCION)[number]) : 'realizada';
+
 export const EJE_CLASE: Array<[string, string]> = [
   ['INFANCIA', 'eje-infancia'],
   ['ARTE', 'eje-arte'],

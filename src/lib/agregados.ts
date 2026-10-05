@@ -24,15 +24,18 @@ export interface Resumen {
 const cargado = (v: unknown): boolean => v !== null && v !== undefined && v !== '';
 
 export function resumen(data: Registro[]): Resumen {
-  const conCosto = data.filter((r) => cargado(r.costo));
+  // El costo/inversión ya invertidos cuentan siempre, sea la acción pasada, planificada a futuro
+  // o cancelada; "acciones" y "conCosto" en cambio reflejan solo lo ya realizado (para el
+  // conteo del Dashboard), dejando afuera lo planificado y lo cancelado.
+  const realizadas = data.filter((r) => r.estado !== 'planificada' && r.estado !== 'cancelada');
   return {
-    acciones: data.length,
+    acciones: realizadas.length,
     donaciones: data.filter((r) => r.tipo === 'Donación realizada').length,
     beneficiarios: new Set(data.map((r) => (r.beneficiario || '').trim().toUpperCase()).filter(Boolean)).size,
     horas: data.reduce((s, r) => s + (Number(r.horas) || 0), 0),
-    costo: conCosto.reduce((s, r) => s + (Number(r.costo) || 0), 0),
+    costo: data.filter((r) => cargado(r.costo)).reduce((s, r) => s + (Number(r.costo) || 0), 0),
     inversion: data.filter((r) => cargado(r.inversion)).reduce((s, r) => s + (Number(r.inversion) || 0), 0),
-    conCosto: conCosto.length,
+    conCosto: realizadas.filter((r) => cargado(r.costo)).length,
   };
 }
 

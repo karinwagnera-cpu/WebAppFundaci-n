@@ -2,6 +2,7 @@ export type Vista = 'dashboard' | 'registro' | 'campanas' | 'calendario' | 'anal
 export type Rol = 'admin' | 'viewer';
 export type Tema = 'light' | 'dark';
 export type EstadoCampania = 'planificada' | 'activa' | 'finalizada';
+export type EstadoAccion = 'planificada' | 'realizada' | 'cancelada';
 
 export interface Registro {
   id: number;
@@ -22,6 +23,9 @@ export interface Registro {
   inversion?: number | null;
   numeroCertificado?: string | null;
   numeroFactura?: string | null;
+  estado?: EstadoAccion | null;
+  fotos?: Adjunto[];
+  consts?: Adjunto[];
   fotosCount?: number;
   tieneFotos?: boolean;
   constanciaCount?: number;
@@ -36,6 +40,15 @@ export interface Filtro {
 }
 
 export interface Adjunto {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  path: string;
+}
+
+/** Archivo leído localmente como data URL (usado por Documentación, que sigue en localStorage). */
+export interface ArchivoLeido {
   name: string;
   type: string;
   size: number;
@@ -70,6 +83,7 @@ export interface RegistroForm {
   observaciones: string;
   numeroCertificado: string;
   numeroFactura: string;
+  estado: EstadoAccion;
   fotos: Adjunto[];
   consts: Adjunto[];
 }
@@ -79,7 +93,7 @@ export interface DocForm {
   categoria: string;
   fecha: string;
   notas: string;
-  file: Adjunto | null;
+  file: ArchivoLeido | null;
 }
 
 export interface Prefs {

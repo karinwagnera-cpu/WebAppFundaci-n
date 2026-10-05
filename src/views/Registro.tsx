@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Filtro, Registro } from '../types';
 import { anios } from '../lib/agregados';
+import { ESTADO_ACCION_LABEL } from '../lib/constants';
 import { fmtFecha, fmtMoney, tituloEje, tituloTexto } from '../lib/format';
 import FiltroBar from '../components/FiltroBar';
 import Icon from '../components/Icon';
@@ -240,7 +241,14 @@ export default function RegistroView({
                       <span className="fila-num">{(actual - 1) * porPagina + i + 1}</span>
                     </div>
                   </td>
-                  <td>{fmtFecha(r.fecha)}</td>
+                  <td>
+                    {fmtFecha(r.fecha)}
+                    {r.estado && r.estado !== 'realizada' && (
+                      <span className={`badge estado-badge estado-${r.estado}`} style={{ marginLeft: 6 }}>
+                        {ESTADO_ACCION_LABEL[r.estado]}
+                      </span>
+                    )}
+                  </td>
                   <td>{r.tipo || '—'}</td>
                   <td>
                     {tituloEje(r.eje)}

@@ -7,11 +7,13 @@ import Icon from '../components/Icon';
 interface Props {
   registros: Registro[];
   onVer: (id: number) => void;
+  puedeEditar: boolean;
+  onNuevoEnFecha: (fecha: string) => void;
 }
 
 type Modo = 'month' | 'agenda';
 
-export default function Calendario({ registros, onVer }: Props) {
+export default function Calendario({ registros, onVer, puedeEditar, onNuevoEnFecha }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
   const [modo, setModo] = useState<Modo>('month');
 
@@ -29,17 +31,20 @@ export default function Calendario({ registros, onVer }: Props) {
     return map;
   }, [registros]);
 
-  const celdas = useMemo(() => {
+  const { celdas, semanas } = useMemo(() => {
     const primero = new Date(year, month, 1);
     const offset = (primero.getDay() + 6) % 7;
+    const diasEnMes = new Date(year, month + 1, 0).getDate();
+    const totalSemanas = Math.ceil((offset + diasEnMes) / 7);
     const inicio = new Date(year, month, 1 - offset);
     const hoyISO = new Date().toISOString().slice(0, 10);
-    return Array.from({ length: 42 }, (_, i) => {
+    const celdas = Array.from({ length: totalSemanas * 7 }, (_, i) => {
       const d = new Date(inicio);
       d.setDate(inicio.getDate() + i);
       const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       return { iso, dia: d.getDate(), otro: d.getMonth() !== month, hoy: iso === hoyISO, eventos: porDia.get(iso) || [] };
     });
+    return { celdas, semanas: totalSemanas };
   }, [year, month, porDia]);
 
   const delMes = useMemo(
@@ -52,7 +57,7 @@ export default function Calendario({ registros, onVer }: Props) {
   const mover = (n: number) => setCursor(new Date(year, month + n, 1));
 
   return (
-    <section className="view active">
+    <section className={'view active' + (modo === 'month' ? ' cal-fit' : '')}>
       <div className="cal-toolbar">
         <div className="cal-nav">
           <button className="icon-btn cal-prev" onClick={() => mover(-1)} aria-label="Anterior"><Icon name="chevronLeft" size={20} /></button>
@@ -71,11 +76,13 @@ export default function Calendario({ registros, onVer }: Props) {
           <div className="cal-weekdays">
             {['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map((d) => <span key={d}>{d}</span>)}
           </div>
-          <div className="cal-grid">
+          <div className="cal-grid" style={{ gridTemplateRows: `repeat(${semanas}, 1fr)` }}>
             {celdas.map((c) => (
               <div
                 key={c.iso}
-                className={'cal-cell' + (c.otro ? ' other' : '') + (c.hoy ? ' today' : '') + (c.eventos.length ? ' has-ev' : '')}
+                className={'cal-cell' + (c.otro ? ' other' : '') + (c.hoy ? ' today' : '') + (c.eventos.length ? ' has-ev' : '') + (puedeEditar ? ' clickable' : '')}
+                onClick={() => { if (puedeEditar) onNuevoEnFecha(c.iso); }}
+                title={puedeEditar ? 'Cargar una acción en esta fecha' : undefined}
               >
                 <span className="cal-daynum">{c.dia}</span>
                 {c.eventos.slice(0, 3).map((r) => (
@@ -83,13 +90,13 @@ export default function Calendario({ registros, onVer }: Props) {
                     key={r.id}
                     className={`cal-ev ${ejeClase(r.eje)}`}
                     title={r.beneficiario || ''}
-                    onClick={() => onVer(r.id)}
+                    onClick={(e) => { e.stopPropagation(); onVer(r.id); }}
                   >
                     {tituloTexto(r.beneficiario) || 'Acción'}
                   </span>
                 ))}
                 {c.eventos.length > 3 && (
-                  <span className="cal-more" onClick={() => setModo('agenda')}>+{c.eventos.length - 3} más</span>
+                  <span className="cal-more" onClick={(e) => { e.stopPropagation(); setModo('agenda'); }}>+{c.eventos.length - 3} más</span>
                 )}
               </div>
             ))}

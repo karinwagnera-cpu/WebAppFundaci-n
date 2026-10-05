@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Registro } from '../types';
+import { ESTADO_ACCION_LABEL } from '../lib/constants';
 import { fmtFecha, fmtMoney, tituloEje, tituloTexto } from '../lib/format';
-import { loadAdjuntos, type Adjuntos } from '../lib/storage';
 import Icon from '../components/Icon';
 
 interface Props {
@@ -14,8 +14,16 @@ interface Props {
 const cargado = (v: unknown): boolean => v !== null && v !== undefined && String(v).trim() !== '';
 
 export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEditar }: Props) {
-  const [adj, setAdj] = useState<Adjuntos>({ fotos: [], consts: [] });
-  useEffect(() => { setAdj(loadAdjuntos(r.id)); }, [r.id]);
+  const fotos = r.fotos ?? [];
+  const consts = r.consts ?? [];
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (previewIdx === null) return;
+    const cerrarTecla = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreviewIdx(null); };
+    document.addEventListener('keydown', cerrarTecla);
+    return () => document.removeEventListener('keydown', cerrarTecla);
+  }, [previewIdx]);
 
   const campos: Array<{ label: string; val: string; num?: boolean }> = [];
   const push = (label: string, val: string, num?: boolean) => { if (cargado(val)) campos.push({ label, val, num }); };
@@ -37,6 +45,9 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
             <div className="detail-eyebrow">{r.tipo || 'Detalle de acción'}</div>
             <h2>{tituloTexto(r.beneficiario) || 'Sin nombre'}</h2>
             <div className="detail-meta">
+              {r.estado && r.estado !== 'realizada' && (
+                <span className={`chip estado-badge estado-${r.estado}`}>{ESTADO_ACCION_LABEL[r.estado]}</span>
+              )}
               {r.eje && <span className="chip eje">{tituloEje(r.eje)}</span>}
               {r.ejeSecundario && <span className="chip">{tituloEje(r.ejeSecundario)}</span>}
               {r.fecha && <span className="chip">{fmtFecha(r.fecha)}</span>}
@@ -66,20 +77,29 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
             </div>
           )}
           <div className="detail-media">
-            {adj.fotos.length > 0 && (
+            {fotos.length > 0 && (
               <div className="detail-media-section">
-                <div className="detail-media-title">Fotos ({adj.fotos.length})</div>
+                <div className="detail-media-title">Fotos ({fotos.length})</div>
                 <div className="detail-photos">
-                  {adj.fotos.map((f, i) => <img key={i} src={f.data} alt="Foto" />)}
+                  {fotos.map((f, i) => (
+                    <button
+                      key={i} type="button" className="foto-thumb"
+                      onClick={() => setPreviewIdx(i)}
+                      aria-label={`Ver vista previa de ${f.name || 'foto'}`}
+                    >
+                      <img src={f.url} alt={f.name || 'Foto'} />
+                      {f.name && <span className="foto-name">{f.name}</span>}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
-            {adj.consts.length > 0 && (
+            {consts.length > 0 && (
               <div className="detail-media-section">
                 <div className="detail-media-title">Constancia firmada</div>
                 <div className="detail-const">
-                  {adj.consts.map((c, i) => (
-                    <a key={i} href={c.data} download={c.name || `constancia_${r.id}_${i + 1}`}>
+                  {consts.map((c, i) => (
+                    <a key={i} href={c.url} target="_blank" rel="noopener noreferrer">
                       <Icon name="file" size={16} />{c.name || `Constancia ${i + 1}`}
                     </a>
                   ))}
@@ -93,6 +113,14 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
           {puedeEditar && <button className="btn" onClick={onEditar}>Editar registro</button>}
         </div>
       </div>
+
+      {previewIdx !== null && fotos[previewIdx] && (
+        <div className="lightbox" onClick={() => setPreviewIdx(null)}>
+          <button className="lightbox-close" onClick={() => setPreviewIdx(null)} aria-label="Cerrar vista previa">✕</button>
+          <img src={fotos[previewIdx].url} alt={fotos[previewIdx].name || 'Foto'} onClick={(e) => e.stopPropagation()} />
+          {fotos[previewIdx].name && <div className="lightbox-caption">{fotos[previewIdx].name}</div>}
+        </div>
+      )}
     </div>
   );
 }
