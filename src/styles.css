@@ -197,8 +197,10 @@
   .save-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--sage);}
 
   .profile-btn{
-    width:42px;height:42px;min-width:42px;min-height:42px;border-radius:50%;border:1px solid var(--line-strong);
-    background:var(--panel);cursor:pointer;padding:0;flex-shrink:0;overflow:hidden;
+    width:42px;height:42px;min-width:42px;min-height:42px;max-width:42px;max-height:42px;
+    aspect-ratio:1/1;flex:0 0 42px;box-sizing:border-box;
+    border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--panel);cursor:pointer;padding:0;overflow:hidden;
     display:flex;align-items:center;justify-content:center;transition:border-color .15s ease;
   }
   .profile-btn:hover{border-color:var(--maroon);}
@@ -213,11 +215,12 @@
   [data-theme="dark"] .icon-btn .theme-sun{display:none;}
   [data-theme="dark"] .icon-btn .theme-moon{display:block;}
   .avatar{
-    width:34px;height:34px;border-radius:50%;background:var(--maroon);color:#fff;
+    width:34px;height:34px;min-width:34px;min-height:34px;aspect-ratio:1/1;flex:0 0 34px;
+    border-radius:50%;background:var(--maroon);color:#fff;overflow:hidden;
     display:flex;align-items:center;justify-content:center;
     font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.02em;
   }
-  .avatar.big{width:44px;height:44px;font-size:15px;}
+  .avatar.big{width:44px;height:44px;min-width:44px;min-height:44px;flex-basis:44px;font-size:15px;}
 
   .profile-menu{
     display:none;position:absolute;top:58px;right:24px;z-index:60;
