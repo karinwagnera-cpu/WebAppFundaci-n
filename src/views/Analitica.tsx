@@ -108,8 +108,8 @@ export default function Analitica({ registros, campanas, filtro, onFiltro, tema 
   return (
     <section className="view active" id="view-analitica">
       <FiltroBar filtro={filtro} anios={anios(registros)} onChange={onFiltro}>
-        <button className="btn secondary" onClick={exportarCsv}><Icon name="download" /> Exportar CSV</button>
-        <button className="btn secondary" onClick={() => window.print()}><Icon name="print" /> Imprimir / PDF</button>
+        <button className="btn secondary small" onClick={exportarCsv}><Icon name="download" /> Exportar CSV</button>
+        <button className="btn secondary small" onClick={() => window.print()}><Icon name="print" /> Imprimir / PDF</button>
       </FiltroBar>
 
       <div className="report-doc">
