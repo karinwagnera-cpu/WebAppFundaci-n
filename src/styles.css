@@ -271,9 +271,10 @@
   }
   #view-analitica .filters{justify-content:flex-end;}
   .filter-toggle{
-    display:inline-flex;align-items:center;gap:8px;flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;
+    height:32px;line-height:1;box-sizing:border-box;
     background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--radius-pill);
-    box-shadow:var(--shadow-soft);padding:7px 12px;cursor:pointer;
+    box-shadow:var(--shadow-soft);padding:0 12px;cursor:pointer;
     font-family:var(--font-display);font-weight:700;font-size:11.5px;color:var(--ink-soft);
     position:relative;transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
@@ -349,11 +350,12 @@
   textarea{min-width:100%;resize:vertical;}
 
   .btn{
-    display:inline-flex;align-items:center;gap:7px;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    height:32px;line-height:1;
     font-family:var(--font-display);
     font-weight:700;
     font-size:11.5px;
-    padding:7px 14px;
+    padding:0 14px;
     border-radius:var(--radius-pill);
     border:1px solid var(--maroon);
     background:var(--maroon);
@@ -367,7 +369,7 @@
   .btn.secondary:hover{border-color:var(--maroon);color:var(--maroon);}
   .btn.danger{background:var(--panel);color:#A6432E;border-color:#E9CFC4;box-shadow:none;}
   .btn.danger:hover{background:#FBF0EA;}
-  .btn.small{padding:6px 12px;font-size:11.5px;}
+  .btn.small{height:28px;padding:0 12px;font-size:11.5px;}
 
   /* ---------- KPI cards ---------- */
   .kpi-grid{
