@@ -17,10 +17,16 @@ export interface Perfil {
   avatarUrl: string | null;
 }
 
-export async function obtenerPerfil(userId: string): Promise<Perfil> {
+/**
+ * Todo usuario autenticado tiene una fila en `perfiles` (la crea un trigger al registrarse),
+ * así que `null` acá nunca es un estado legítimo: significa que la consulta no pudo resolverse
+ * todavía (por ejemplo, justo después de recargar la página, mientras Supabase revalida el
+ * token de sesión). El llamador debe reintentar antes de asumir "viewer".
+ */
+export async function obtenerPerfil(userId: string): Promise<Perfil | null> {
   if (!supabase) return { rol: 'viewer', avatarUrl: null };
   const { data, error } = await supabase.from('perfiles').select('rol, avatar_url').eq('id', userId).single();
-  if (error || !data) return { rol: 'viewer', avatarUrl: null };
+  if (error || !data) return null;
   return { rol: data.rol === 'admin' ? 'admin' : 'viewer', avatarUrl: data.avatar_url ?? null };
 }
 

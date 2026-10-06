@@ -77,10 +77,10 @@ export default function App() {
 
   useEffect(() => {
     if (!supabaseDisponible || !supabase) { setCargandoSesion(false); return; }
-    supabase.auth.getSession().then(({ data }) => {
-      setSesion(data.session);
-      setCargandoSesion(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data }) => setSesion(data.session))
+      .catch((err) => console.error('No se pudo restaurar la sesión', err))
+      .finally(() => setCargandoSesion(false));
     const { data: suscripcion } = supabase.auth.onAuthStateChange((_evento, nuevaSesion) => {
       setSesion(nuevaSesion);
     });
@@ -91,11 +91,27 @@ export default function App() {
     if (!supabaseDisponible) return;
     if (!sesion) { setRol('viewer'); setAvatarUrl(null); return; }
     let cancelado = false;
-    obtenerPerfil(sesion.user.id).then((p) => {
+    const ESPERA_REINTENTO_MS = 600;
+    const MAX_INTENTOS = 3;
+    const cargar = async (intento: number): Promise<void> => {
+      const p = await obtenerPerfil(sesion.user.id);
       if (cancelado) return;
+      if (!p) {
+        // Justo después de recargar la página el token puede estar revalidándose todavía:
+        // reintentamos un par de veces antes de resignarnos a "viewer".
+        if (intento < MAX_INTENTOS) {
+          await new Promise((r) => setTimeout(r, ESPERA_REINTENTO_MS));
+          if (!cancelado) await cargar(intento + 1);
+          return;
+        }
+        setRol('viewer');
+        setAvatarUrl(null);
+        return;
+      }
       setRol(p.rol);
       setAvatarUrl(p.avatarUrl);
-    });
+    };
+    cargar(0);
     return () => { cancelado = true; };
   }, [sesion]);
 
