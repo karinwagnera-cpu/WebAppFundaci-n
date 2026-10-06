@@ -12,7 +12,7 @@ export interface ColoresChart {
 // gráfico: leer el DOM en ese momento devolvía el color del tema anterior.
 const PALETAS: Record<Tema, Omit<ColoresChart, 'c1' | 'c2' | 'c3' | 'c4' | 'c5' | 'c6'>> = {
   light: { ink: '#56493C', grid: '#EFE7DA', panel: '#FFFFFF', panel2: '#FBF9F5', maroon: '#6E1F32' },
-  dark: { ink: '#AEB6C4', grid: '#242C39', panel: '#171D28', panel2: '#1C2330', maroon: '#C24B67' },
+  dark: { ink: '#E8EBF0', grid: '#242C39', panel: '#171D28', panel2: '#1C2330', maroon: '#C24B67' },
 };
 
 const CHART_COLORS = { c1: '#6E1F32', c2: '#B4863C', c3: '#6B7D5A', c4: '#3E6B6B', c5: '#9C9284', c6: '#A6624B' };

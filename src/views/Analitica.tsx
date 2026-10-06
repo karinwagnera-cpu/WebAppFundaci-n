@@ -139,22 +139,22 @@ export default function Analitica({ registros, campanas, filtro, onFiltro, tema 
         <div className="rd-charts">
           <div className="rd-chart-card">
             <h4 className="rd-h4">Campañas por estado</h4>
-            <ChartCanvas config={charts.campEstado} />
+            <ChartCanvas config={charts.campEstado} tema={tema} />
           </div>
           <div className="rd-chart-card">
             <h4 className="rd-h4">Efectividad por campaña (% de meta)</h4>
-            <ChartCanvas config={charts.efectividad} />
+            <ChartCanvas config={charts.efectividad} tema={tema} />
           </div>
         </div>
 
         <div className="rd-charts">
           <div className="rd-chart-card">
             <h4 className="rd-h4">Distribución por eje estratégico</h4>
-            <ChartCanvas config={charts.eje} />
+            <ChartCanvas config={charts.eje} tema={tema} />
           </div>
           <div className="rd-chart-card">
             <h4 className="rd-h4">Costo interno vs. Inversión</h4>
-            <ChartCanvas config={charts.fin} />
+            <ChartCanvas config={charts.fin} tema={tema} />
           </div>
         </div>
 

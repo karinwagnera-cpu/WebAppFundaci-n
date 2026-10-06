@@ -142,15 +142,15 @@ export default function Dashboard({ registros, filtro, onFiltro, tema }: Props) 
       <div className="panel-grid">
         <div className="panel">
           <h3>Acciones por eje estratégico</h3>
-          <ChartCanvas config={charts.eje} />
+          <ChartCanvas config={charts.eje} tema={tema} />
         </div>
         <div className="panel">
           <h3>Evolución anual</h3>
-          <ChartCanvas config={charts.anual} />
+          <ChartCanvas config={charts.anual} tema={tema} />
         </div>
         <div className="panel">
           <h3>Distribución por unidad de negocio</h3>
-          <ChartCanvas config={charts.unidad} />
+          <ChartCanvas config={charts.unidad} tema={tema} />
         </div>
         <div className="panel">
           <h3>Costo interno vs. Inversión</h3>
@@ -168,7 +168,7 @@ export default function Dashboard({ registros, filtro, onFiltro, tema }: Props) 
               <div className="fn">{ratio}</div>
             </div>
           </div>
-          <ChartCanvas config={charts.financiero} height={200} />
+          <ChartCanvas config={charts.financiero} height={200} tema={tema} />
         </div>
       </div>
     </section>
