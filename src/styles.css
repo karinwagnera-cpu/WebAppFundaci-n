@@ -148,7 +148,7 @@
     transition:background .12s ease, color .12s ease;
   }
   .nav-item .icon{width:22px;height:22px;flex-shrink:0;}
-  .nav-label{font-size:8px;letter-spacing:-0.02em;line-height:1.15;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+  .nav-label{font-size:8px;letter-spacing:-0.02em;line-height:1.15;white-space:normal;max-width:100%;overflow-wrap:break-word;hyphens:auto;}
   .nav-item:hover{background:var(--panel-2);color:var(--ink);}
   .nav-item.active{background:var(--maroon);color:#fff;}
   .nav-item.active .icon{stroke:#fff;}
