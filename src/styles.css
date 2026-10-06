@@ -89,7 +89,6 @@
     font-size:13px;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
-    transition:background .3s ease, color .3s ease;
   }
   h1,h2,h3,h4{
     font-family:var(--font-display);
