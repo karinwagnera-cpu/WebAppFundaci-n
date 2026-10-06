@@ -21,13 +21,16 @@ export default function Documentacion({ docs, puedeEditar, onNuevo, onVer, onEli
   return (
     <section className="view active">
       <div className="table-tools">
-        <div className="field" style={{ minWidth: 220 }}>
-          <label htmlFor="docFiltro">Categoría</label>
-          <select id="docFiltro" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-            <option value="">Todas las categorías</option>
-            {DOC_CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
+        <select
+          className="filter-select"
+          id="docFiltro"
+          aria-label="Filtrar por categoría"
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+        >
+          <option value="">Todas las categorías</option>
+          {DOC_CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
         {puedeEditar && <button className="btn" onClick={onNuevo}><Icon name="plus" /> Subir documento</button>}
       </div>
 
