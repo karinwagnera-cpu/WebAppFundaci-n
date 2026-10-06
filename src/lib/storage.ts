@@ -1,9 +1,8 @@
-import type { Adjunto, ArchivoLeido, Campania, DocMeta, Prefs, Registro } from '../types';
+import type { Adjunto, Campania, DocMeta, Prefs, Registro } from '../types';
 import { normalizarEstadoAccion } from './constants';
 import { supabase } from './supabaseClient';
 
 const KEY_REGISTROS = 'fh_registros';
-const KEY_DOCS = 'fh_docs';
 const KEY_CAMPANAS = 'fh_campanas';
 const KEY_PREFS = 'fh_prefs';
 
@@ -34,9 +33,6 @@ export const loadRegistros = (): Registro[] | null => {
   }
 };
 export const saveRegistros = (regs: Registro[]): boolean => write(KEY_REGISTROS, regs);
-
-export const loadDocs = (): DocMeta[] => read<DocMeta[]>(KEY_DOCS, []);
-export const saveDocs = (docs: DocMeta[]): boolean => write(KEY_DOCS, docs);
 
 export const loadCampanas = (): Campania[] | null => {
   try {
@@ -275,17 +271,72 @@ export async function eliminarAdjuntosStorage(adjuntos: Adjunto[]): Promise<void
   try { await supabase.storage.from(BUCKET_ADJUNTOS).remove(adjuntos.map((a) => a.path)); } catch { /* no bloquea */ }
 }
 
-/** Documentación sigue en localStorage: lee el archivo como data URL, con el tope de espacio del navegador. */
-const MAX_DOC_BYTES = 4.3 * 1024 * 1024;
-export function leerArchivoLocal(file: File): Promise<ArchivoLeido> {
-  return new Promise((resolve, reject) => {
-    if (file.size > MAX_DOC_BYTES) {
-      reject(new Error(`"${file.name}" pesa más de 4.3 MB. Elegí un archivo más liviano.`));
-      return;
-    }
-    const rd = new FileReader();
-    rd.onload = () => resolve({ name: file.name, type: file.type, size: file.size, data: String(rd.result) });
-    rd.onerror = () => reject(new Error(`No se pudo leer "${file.name}".`));
-    rd.readAsDataURL(file);
-  });
+// --- Documentación (Supabase) --------------------------------------------
+// Metadatos en Postgres (tabla documentos) y el archivo en Storage (bucket
+// "documentos", mismas políticas que "adjuntos": cualquier autenticado lee,
+// solo admin sube/borra), compartido entre todos los usuarios y dispositivos.
+
+const BUCKET_DOCUMENTOS = 'documentos';
+export const MAX_DOC_BYTES = 15 * 1024 * 1024;
+
+interface DocumentoRow {
+  id: number;
+  nombre: string;
+  categoria: string;
+  fecha: string | null;
+  notas: string | null;
+  tipo: string;
+  size: number;
+  url: string;
+  path: string;
+}
+
+const docDesdeFila = (row: DocumentoRow): DocMeta => ({
+  id: row.id,
+  nombre: row.nombre,
+  categoria: row.categoria,
+  fecha: row.fecha,
+  notas: row.notas ?? '',
+  tipo: row.tipo,
+  size: row.size,
+  url: row.url,
+  path: row.path,
+});
+
+export async function fetchDocumentosRemoto(): Promise<DocMeta[]> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  const { data, error } = await supabase.from('documentos').select('*').order('id');
+  if (error) throw error;
+  return (data as DocumentoRow[]).map(docDesdeFila);
+}
+
+/** Sube el archivo al bucket y devuelve los datos listos para insertar en la tabla documentos. */
+export async function subirDocumento(file: File): Promise<{ tipo: string; size: number; url: string; path: string }> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  if (file.size > MAX_DOC_BYTES) {
+    throw new Error(`"${file.name}" pesa más de ${Math.round(MAX_DOC_BYTES / 1024 / 1024)} MB. Elegí un archivo más liviano.`);
+  }
+  const limpio = file.name.replace(/[^\w.-]+/g, '_');
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${limpio}`;
+  const { error } = await supabase.storage.from(BUCKET_DOCUMENTOS).upload(path, file, { contentType: file.type });
+  if (error) throw new Error(`No se pudo subir "${file.name}": ${error.message}`);
+  const { data } = supabase.storage.from(BUCKET_DOCUMENTOS).getPublicUrl(path);
+  return { tipo: file.type, size: file.size, url: data.publicUrl, path };
+}
+
+export async function insertarDocumentoRemoto(doc: Omit<DocMeta, 'id'>): Promise<DocMeta> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  const { data, error } = await supabase.from('documentos').insert({
+    nombre: doc.nombre, categoria: doc.categoria, fecha: doc.fecha, notas: doc.notas || null,
+    tipo: doc.tipo, size: doc.size, url: doc.url, path: doc.path,
+  }).select().single();
+  if (error) throw error;
+  return docDesdeFila(data as DocumentoRow);
+}
+
+export async function deleteDocumentoRemoto(id: number, path: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  const { error } = await supabase.from('documentos').delete().eq('id', id);
+  if (error) throw error;
+  try { await supabase.storage.from(BUCKET_DOCUMENTOS).remove([path]); } catch { /* no bloquea */ }
 }

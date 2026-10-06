@@ -47,14 +47,6 @@ export interface Adjunto {
   path: string;
 }
 
-/** Archivo leído localmente como data URL (usado por Documentación, que sigue en localStorage). */
-export interface ArchivoLeido {
-  name: string;
-  type: string;
-  size: number;
-  data: string;
-}
-
 export interface DocMeta {
   id: number;
   nombre: string;
@@ -63,7 +55,8 @@ export interface DocMeta {
   notas: string;
   tipo: string;
   size: number;
-  data: string;
+  url: string;
+  path: string;
 }
 
 export interface RegistroForm {
@@ -93,7 +86,7 @@ export interface DocForm {
   categoria: string;
   fecha: string;
   notas: string;
-  file: ArchivoLeido | null;
+  file: File | null;
 }
 
 export interface Prefs {

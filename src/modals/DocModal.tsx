@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import type { DocForm } from '../types';
 import { DOC_CATEGORIAS } from '../lib/constants';
-import { leerArchivoLocal } from '../lib/storage';
-import { notificar } from '../lib/notificaciones';
 
 interface Props {
-  onGuardar: (form: DocForm) => void;
+  onGuardar: (form: DocForm) => void | Promise<void>;
   onCerrar: () => void;
 }
 
@@ -13,16 +11,18 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
   const [form, setForm] = useState<DocForm>({
     nombre: '', categoria: DOC_CATEGORIAS[0], fecha: new Date().toISOString().slice(0, 10), notas: '', file: null,
   });
+  const [guardando, setGuardando] = useState(false);
 
-  const elegir = async (files: FileList | null) => {
+  const elegir = (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    try {
-      const adj = await leerArchivoLocal(file);
-      setForm((f) => ({ ...f, file: adj, nombre: f.nombre || file.name.replace(/\.[^.]+$/, '') }));
-    } catch (err) {
-      notificar(err instanceof Error ? err.message : 'No se pudo cargar el archivo.');
-    }
+    setForm((f) => ({ ...f, file, nombre: f.nombre || file.name.replace(/\.[^.]+$/, '') }));
+  };
+
+  const enviar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try { await onGuardar(form); } finally { setGuardando(false); }
   };
 
   return (
@@ -30,7 +30,7 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
       <div className="modal" style={{ maxWidth: 520 }}>
         <h2>Subir documento</h2>
         <div className="modal-sub">Documentación interna, legal o institucional de la Fundación.</div>
-        <form onSubmit={(e) => { e.preventDefault(); onGuardar(form); }}>
+        <form onSubmit={enviar}>
           <div className="form-grid">
             <div className="field full">
               <label htmlFor="docArchivo">Archivo *</label>
@@ -60,8 +60,8 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
             </div>
           </div>
           <div className="modal-actions">
-            <button type="button" className="btn secondary" onClick={onCerrar}>Cancelar</button>
-            <button type="submit" className="btn">Subir</button>
+            <button type="button" className="btn secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
+            <button type="submit" className="btn" disabled={guardando}>{guardando ? 'Subiendo…' : 'Subir'}</button>
           </div>
         </form>
       </div>

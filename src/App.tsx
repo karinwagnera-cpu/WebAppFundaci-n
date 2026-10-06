@@ -5,8 +5,9 @@ import { SEED_CAMPANAS } from './data/campanas';
 import type { Session } from '@supabase/supabase-js';
 import {
   deleteCampaniaRemoto, deleteRegistroRemoto, descargar, eliminarAdjuntosStorage,
-  fetchCampanasRemoto, fetchRegistrosRemoto, insertarRegistrosRemoto, loadCampanas, loadDocs, loadPrefs, loadRegistros,
-  reemplazarRegistrosRemoto, saveCampanas, saveDocs, savePrefs, saveRegistros,
+  deleteDocumentoRemoto, fetchCampanasRemoto, fetchDocumentosRemoto, fetchRegistrosRemoto,
+  insertarDocumentoRemoto, insertarRegistrosRemoto, loadCampanas, loadPrefs, loadRegistros,
+  reemplazarRegistrosRemoto, saveCampanas, savePrefs, saveRegistros, subirDocumento,
   supabaseDisponible, upsertCampaniaRemoto, upsertRegistroRemoto,
 } from './lib/storage';
 import { supabase } from './lib/supabaseClient';
@@ -43,7 +44,7 @@ export default function App() {
   const prefs = useMemo(() => loadPrefs(), []);
   const [vista, setVista] = useState<Vista>('dashboard');
   const [registros, setRegistros] = useState<Registro[]>(() => loadRegistros() ?? SEED_REGISTROS);
-  const [docs, setDocs] = useState<DocMeta[]>(() => loadDocs());
+  const [docs, setDocs] = useState<DocMeta[]>([]);
   const [campanas, setCampanas] = useState<Campania[]>(() => loadCampanas() ?? SEED_CAMPANAS);
   const [tema, setTema] = useState<Tema>(prefs.theme ?? 'light');
   const [rol, setRol] = useState<Rol>(supabaseDisponible ? 'viewer' : 'admin');
@@ -103,10 +104,11 @@ export default function App() {
     let cancelado = false;
     (async () => {
       try {
-        const [regs, camps] = await Promise.all([fetchRegistrosRemoto(), fetchCampanasRemoto()]);
+        const [regs, camps, documentos] = await Promise.all([fetchRegistrosRemoto(), fetchCampanasRemoto(), fetchDocumentosRemoto()]);
         if (cancelado) return;
         setRegistros(regs);
         setCampanas(camps);
+        setDocs(documentos);
         saveRegistros(regs);
         saveCampanas(camps);
         setSinConexion(false);
@@ -144,11 +146,6 @@ export default function App() {
     avisarGuardado();
   }, [avisarGuardado]);
 
-  const persistirDocs = useCallback((next: DocMeta[]) => {
-    setDocs(next);
-    saveDocs(next);
-    avisarGuardado();
-  }, [avisarGuardado]);
 
   const persistirCampanas = useCallback((next: Campania[]) => {
     setCampanas(next);
@@ -299,32 +296,49 @@ export default function App() {
     setEditando(null);
   };
 
-  const guardarDoc = (form: DocForm) => {
+  const guardarDoc = async (form: DocForm) => {
     if (!form.file) { notificar('Elegí un archivo antes de subir.'); return; }
     if (!form.nombre.trim()) { notificar('Poné un nombre al documento.'); return; }
-    const id = docs.reduce((m, d) => Math.max(m, d.id || 0), 0) + 1;
-    persistirDocs([...docs, {
-      id, nombre: form.nombre.trim(), categoria: form.categoria, fecha: form.fecha || null,
-      notas: form.notas.trim(), tipo: form.file.type, size: form.file.size, data: form.file.data,
-    }]);
+    let subido;
+    try {
+      subido = await subirDocumento(form.file);
+    } catch (err) {
+      notificar(mensajeError(err));
+      return;
+    }
+    try {
+      const doc = await insertarDocumentoRemoto({
+        nombre: form.nombre.trim(), categoria: form.categoria, fecha: form.fecha || null,
+        notas: form.notas.trim(), ...subido,
+      });
+      setDocs((d) => [...d, doc]);
+      avisarGuardado();
+    } catch (err) {
+      notificar('No se pudo guardar el documento en la base compartida: ' + mensajeError(err));
+      return;
+    }
     setDocModal(false);
+    notificar('Documento subido.', 'ok');
   };
 
   const verDoc = (id: number) => {
     const d = docs.find((x) => x.id === id);
     if (!d) { notificar('No se pudo recuperar el archivo.'); return; }
-    const a = document.createElement('a');
-    a.href = d.data;
-    a.download = d.nombre;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    window.open(d.url, '_blank', 'noopener,noreferrer');
   };
 
   const eliminarDoc = async (id: number) => {
     if (!await confirmar({ mensaje: 'Se eliminará este documento. Esta acción no se puede deshacer.', peligroso: true, textoConfirmar: 'Eliminar' })) return;
-    persistirDocs(docs.filter((d) => d.id !== id));
+    const doc = docs.find((d) => d.id === id);
+    if (!doc) return;
+    try {
+      await deleteDocumentoRemoto(id, doc.path);
+    } catch (err) {
+      notificar('No se pudo eliminar el documento: ' + mensajeError(err));
+      return;
+    }
+    setDocs((d) => d.filter((x) => x.id !== id));
+    avisarGuardado();
   };
 
   const backup = () => {
@@ -347,7 +361,6 @@ export default function App() {
         })) return;
         await reemplazarRegistrosRemoto(p.registros);
         persistirRegistros(p.registros);
-        if (Array.isArray(p.docs)) persistirDocs(p.docs);
         setPerfilAbierto(false);
         notificar('Copia de seguridad restaurada.', 'ok');
       } catch (err) {

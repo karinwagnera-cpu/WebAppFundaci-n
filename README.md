@@ -21,7 +21,7 @@ npm run typecheck  # solo chequeo de tipos
 - Chart.js 4 (mismos gráficos que el original)
 - **Registros y campañas: Supabase (Postgres)**, compartidos entre todos los usuarios. Login con Supabase Auth (email + contraseña); RLS exige sesión iniciada para leer, y rol "admin" (tabla `perfiles`) para escribir.
 - **Fotos, flyers y constancias de cada acción: Supabase Storage** (bucket `adjuntos`, público para mostrarlas con una URL directa; solo un admin autenticado puede subir/borrar), compartidos entre todos los usuarios.
-- Documentos de la sección Documentación y preferencias siguen en `localStorage` (por ahora locales a cada dispositivo).
+- **Documentación: Supabase Storage** (bucket `documentos`, mismo criterio que `adjuntos` — cualquier autenticado lee, solo admin sube/borra) + metadatos en la tabla `documentos`. Las preferencias (tema) siguen en `localStorage` (locales a cada dispositivo, es lo esperado).
 - Si `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` no están configuradas, la app sigue funcionando con la copia local (`localStorage`) en modo sin conexión.
 
 ## Estructura
