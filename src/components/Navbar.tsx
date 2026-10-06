@@ -6,13 +6,14 @@ interface Props {
   tema: Tema;
   guardado: boolean;
   busqueda: string;
+  avatarUrl: string | null;
   onBusqueda: (q: string) => void;
   onTema: () => void;
   onMenu: () => void;
   onPerfil: () => void;
 }
 
-export default function Navbar({ rol, tema, guardado, busqueda, onBusqueda, onTema, onMenu, onPerfil }: Props) {
+export default function Navbar({ rol, tema, guardado, busqueda, avatarUrl, onBusqueda, onTema, onMenu, onPerfil }: Props) {
   return (
     <header className="navbar">
       <div className="navbar-left">
@@ -41,7 +42,9 @@ export default function Navbar({ rol, tema, guardado, busqueda, onBusqueda, onTe
           <Icon name={tema === 'dark' ? 'moon' : 'sun'} size={20} />
         </button>
         <button className="profile-btn" onClick={onPerfil} aria-label="Perfil">
-          <span className="avatar">FH</span>
+          <span className="avatar">
+            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'FH'}
+          </span>
         </button>
       </div>
     </header>

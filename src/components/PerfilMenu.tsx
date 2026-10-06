@@ -3,24 +3,29 @@ import type { Rol } from '../types';
 interface Props {
   rol: Rol;
   email: string | null;
+  avatarUrl: string | null;
   puedeEditar: boolean;
   mostrarSesion: boolean;
+  onAbrirPerfil: () => void;
   onCerrarSesion: () => void;
   onBackup: () => void;
   onImportar: (file: File) => void;
   onReset: () => void;
 }
 
-export default function PerfilMenu({ rol, email, puedeEditar, mostrarSesion, onCerrarSesion, onBackup, onImportar, onReset }: Props) {
+export default function PerfilMenu({ rol, email, avatarUrl, puedeEditar, mostrarSesion, onAbrirPerfil, onCerrarSesion, onBackup, onImportar, onReset }: Props) {
   return (
     <div className="profile-menu show">
       <div className="profile-menu-head">
-        <span className="avatar big">FH</span>
+        <span className="avatar big" style={{ overflow: 'hidden' }}>
+          {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'FH'}
+        </span>
         <div>
           <div className="pm-name">{email || 'Fundación Huentala'}</div>
           <div className="pm-sub">{rol === 'viewer' ? 'Solo lectura' : 'Administrador'}</div>
         </div>
       </div>
+      {mostrarSesion && <button className="pm-item" onClick={onAbrirPerfil}>Mi perfil</button>}
       <button className="pm-item" onClick={onBackup}>Descargar copia de seguridad</button>
       {puedeEditar && (
         <>

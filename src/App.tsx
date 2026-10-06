@@ -10,7 +10,7 @@ import {
   supabaseDisponible, upsertCampaniaRemoto, upsertRegistroRemoto,
 } from './lib/storage';
 import { supabase } from './lib/supabaseClient';
-import { cerrarSesion, obtenerRol } from './lib/auth';
+import { cerrarSesion, obtenerPerfil } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
 import { mensajeError } from './lib/format';
@@ -29,6 +29,7 @@ import DetalleModal from './modals/DetalleModal';
 import RegistroModal from './modals/RegistroModal';
 import CampaniaModal from './modals/CampaniaModal';
 import DocModal from './modals/DocModal';
+import PerfilUsuarioModal from './modals/PerfilUsuarioModal';
 
 const FILTRO_VACIO: Filtro = { y: '', m: '', e: '' };
 
@@ -45,8 +46,10 @@ export default function App() {
   const [rol, setRol] = useState<Rol>(supabaseDisponible ? 'viewer' : 'admin');
   const [sesion, setSesion] = useState<Session | null>(null);
   const [cargandoSesion, setCargandoSesion] = useState(supabaseDisponible);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [perfilAbierto, setPerfilAbierto] = useState(false);
+  const [perfilUsuarioAbierto, setPerfilUsuarioAbierto] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [sinConexion, setSinConexion] = useState(!supabaseDisponible);
 
@@ -82,9 +85,13 @@ export default function App() {
 
   useEffect(() => {
     if (!supabaseDisponible) return;
-    if (!sesion) { setRol('viewer'); return; }
+    if (!sesion) { setRol('viewer'); setAvatarUrl(null); return; }
     let cancelado = false;
-    obtenerRol(sesion.user.id).then((r) => { if (!cancelado) setRol(r); });
+    obtenerPerfil(sesion.user.id).then((p) => {
+      if (cancelado) return;
+      setRol(p.rol);
+      setAvatarUrl(p.avatarUrl);
+    });
     return () => { cancelado = true; };
   }, [sesion]);
 
@@ -116,6 +123,7 @@ export default function App() {
       setEditandoCampania(null);
       setDocModal(false);
       setPerfilAbierto(false);
+      setPerfilUsuarioAbierto(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -408,6 +416,7 @@ export default function App() {
           tema={tema}
           guardado={guardado}
           busqueda={busqueda}
+          avatarUrl={avatarUrl}
           onBusqueda={(q) => { setBusqueda(q); setVista('registro'); }}
           onTema={() => setTema((t) => (t === 'dark' ? 'light' : 'dark'))}
           onMenu={() => setMenuAbierto(true)}
@@ -418,8 +427,10 @@ export default function App() {
           <PerfilMenu
             rol={rol}
             email={sesion?.user.email ?? null}
+            avatarUrl={avatarUrl}
             puedeEditar={puedeEditar}
             mostrarSesion={supabaseDisponible}
+            onAbrirPerfil={() => { setPerfilUsuarioAbierto(true); setPerfilAbierto(false); }}
             onCerrarSesion={cerrarSesion}
             onBackup={backup}
             onImportar={importar}
@@ -512,6 +523,15 @@ export default function App() {
         />
       )}
       {docModal && puedeEditar && <DocModal onGuardar={guardarDoc} onCerrar={() => setDocModal(false)} />}
+      {perfilUsuarioAbierto && sesion && (
+        <PerfilUsuarioModal
+          userId={sesion.user.id}
+          email={sesion.user.email ?? null}
+          avatarUrl={avatarUrl}
+          onAvatarActualizado={setAvatarUrl}
+          onCerrar={() => setPerfilUsuarioAbierto(false)}
+        />
+      )}
       {editandoCampania && puedeEditar && (
         <CampaniaModal
           campania={editandoCampania.campania}
