@@ -50,6 +50,7 @@ export default function App() {
   const [rol, setRol] = useState<Rol>(supabaseDisponible ? 'viewer' : 'admin');
   const [sesion, setSesion] = useState<Session | null>(null);
   const [cargandoSesion, setCargandoSesion] = useState(supabaseDisponible);
+  const [cargandoPerfil, setCargandoPerfil] = useState(supabaseDisponible);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [perfilAbierto, setPerfilAbierto] = useState(false);
@@ -89,8 +90,9 @@ export default function App() {
 
   useEffect(() => {
     if (!supabaseDisponible) return;
-    if (!sesion) { setRol('viewer'); setAvatarUrl(null); return; }
+    if (!sesion) { setRol('viewer'); setAvatarUrl(null); setCargandoPerfil(false); return; }
     let cancelado = false;
+    setCargandoPerfil(true);
     const ESPERA_REINTENTO_MS = 600;
     const MAX_INTENTOS = 3;
     const cargar = async (intento: number): Promise<void> => {
@@ -106,10 +108,12 @@ export default function App() {
         }
         setRol('viewer');
         setAvatarUrl(null);
+        setCargandoPerfil(false);
         return;
       }
       setRol(p.rol);
       setAvatarUrl(p.avatarUrl);
+      setCargandoPerfil(false);
     };
     cargar(0);
     return () => { cancelado = true; };
@@ -443,7 +447,7 @@ export default function App() {
   const irA = (v: Vista) => { setVista(v); setMenuAbierto(false); setPerfilAbierto(false); };
   const detalle = detalleId ? registros.find((r) => r.id === detalleId) ?? null : null;
 
-  if (supabaseDisponible && cargandoSesion) {
+  if (supabaseDisponible && (cargandoSesion || cargandoPerfil)) {
     return (
       <div className="app-loading">
         <div className="app-loading-spinner" />
