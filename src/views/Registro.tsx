@@ -257,7 +257,9 @@ export default function RegistroView({
                   </td>
                   <td>{tituloTexto(r.unidad) || '—'}</td>
                   <td>{tituloTexto(r.beneficiario) || '—'}</td>
-                  <td className="wrap" title={tituloTexto(r.aporte) || undefined}>{tituloTexto(r.aporte) || '—'}</td>
+                  <td className="wrap" title={tituloTexto(r.aporte) || undefined}>
+                    <span className="clamp-2">{tituloTexto(r.aporte) || '—'}</span>
+                  </td>
                   <td className="num">{num(r.costo) ? fmtMoney(r.costo) : '—'}</td>
                   <td className="num">{num(r.inversion) ? fmtMoney(r.inversion) : '—'}</td>
                   <td className="num">{num(r.horas) ? r.horas : '—'}</td>
