@@ -297,7 +297,7 @@
 
   /* Panel desplegable de filtros (dropdown, en todos los tamaños) */
   .filter-panel{
-    display:none;position:absolute;top:100%;left:0;z-index:40;margin-top:8px;
+    display:none;position:absolute;top:100%;right:0;left:auto;z-index:40;margin-top:8px;
     background:var(--panel);border:1px solid var(--line-strong);border-radius:14px;
     box-shadow:var(--shadow-pop);padding:14px;width:260px;
     flex-direction:column;gap:12px;
@@ -326,7 +326,7 @@
     font-weight:700;font-size:12.5px;padding:4px 8px;border-radius:8px;transition:background .12s ease;
   }
   .fp-clear:hover{background:var(--maroon-tint);}
-  .filters, .search-row{position:relative;}
+  .filters, .search-row, .filter-toggle-wrap{position:relative;}
 
   .field{display:flex;flex-direction:column;gap:5px;}
   .field label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:600;}
@@ -530,7 +530,6 @@
   /* Selección de filas + filtro por columna (vista Registro) */
   .reg-actions{display:flex;align-items:center;gap:12px;position:relative;}
   .reg-actions .filters{margin-bottom:0;}
-  .reg-actions .filter-panel{right:0;left:auto;}
   .col-fila{width:70px;}
   th.col-fila{white-space:nowrap;}
   .fila-cell{display:flex;align-items:center;gap:9px;}
@@ -943,8 +942,7 @@
     #view-registro .searchbox{flex:1;}
     #view-registro .filter-toggle .ft-label{display:none;}
     #view-registro .filter-toggle{padding:10px 12px;}
-    .filter-panel{width:calc(100vw - 60px);max-width:320px;right:0;left:auto;}
-    #view-registro .filter-panel{right:0;left:auto;}
+    .filter-panel{width:calc(100vw - 60px);max-width:320px;}
   }
   @media (max-width:600px){
     .navbar-search{display:none;}
