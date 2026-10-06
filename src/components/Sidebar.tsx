@@ -8,7 +8,7 @@ const ITEMS: Array<{ vista: Vista; label: string; icon: IconName }> = [
   { vista: 'calendario', label: 'Calendario', icon: 'calendario' },
   { vista: 'campanas', label: 'Campañas', icon: 'campanas' },
   { vista: 'analitica', label: 'Analítica', icon: 'informes' },
-  { vista: 'documentacion', label: 'Documentos', icon: 'documentacion' },
+  { vista: 'documentacion', label: 'Docs', icon: 'documentacion' },
 ];
 
 interface Props {
