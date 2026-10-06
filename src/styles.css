@@ -205,12 +205,12 @@
   }
   .profile-btn:hover{border-color:var(--maroon);}
   .icon-btn{
-    width:42px;height:42px;min-width:42px;min-height:42px;border-radius:11px;border:1px solid var(--line-strong);
+    width:36px;height:36px;min-width:36px;min-height:36px;border-radius:10px;border:1px solid var(--line-strong);
     background:var(--panel);cursor:pointer;padding:0;flex-shrink:0;color:var(--ink-soft);
     display:flex;align-items:center;justify-content:center;transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
   .icon-btn:hover{border-color:var(--maroon);color:var(--maroon);background:var(--maroon-tint);}
-  .icon-btn svg{width:20px;height:20px;}
+  .icon-btn svg{width:17px;height:17px;}
   .icon-btn .theme-moon{display:none;}
   [data-theme="dark"] .icon-btn .theme-sun{display:none;}
   [data-theme="dark"] .icon-btn .theme-moon{display:block;}
