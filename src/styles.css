@@ -755,7 +755,9 @@
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);
     box-shadow:var(--shadow-card);padding:22px 34px 32px;margin-top:4px;
   }
-  .rd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  /* Membrete del informe: redundante en pantalla (título de la sección, logo y usuario ya están
+     en la barra lateral y el header); solo se muestra al imprimir/exportar como documento. */
+  .rd-head{display:none;justify-content:space-between;align-items:flex-start;gap:20px;
     padding-bottom:16px;border-bottom:2px solid var(--maroon);margin-bottom:18px;flex-wrap:wrap;}
   .rd-brand{display:flex;align-items:center;gap:16px;}
   /* El logo redundaría con el de la barra lateral en pantalla; solo se muestra al imprimir/exportar el informe como documento independiente. */
@@ -899,6 +901,7 @@
     section.view{display:none !important;}
     section.view#view-analitica{display:block !important;}
     .report-doc{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;}
+    .rd-head{display:flex !important;}
     .rd-logo{display:flex !important;}
     .rd-charts{break-inside:avoid;}
     .rd-chart-card, .table-card, .rd-hl{break-inside:avoid;}
