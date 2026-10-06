@@ -79,10 +79,14 @@ export default function App() {
   useEffect(() => {
     if (!supabaseDisponible || !supabase) { setCargandoSesion(false); return; }
     supabase.auth.getSession()
-      .then(({ data }) => setSesion(data.session))
+      .then(({ data }) => {
+        console.debug('[FH-rol] getSession() resolvió, userId=', data.session?.user.id);
+        setSesion(data.session);
+      })
       .catch((err) => console.error('No se pudo restaurar la sesión', err))
       .finally(() => setCargandoSesion(false));
-    const { data: suscripcion } = supabase.auth.onAuthStateChange((_evento, nuevaSesion) => {
+    const { data: suscripcion } = supabase.auth.onAuthStateChange((evento, nuevaSesion) => {
+      console.debug(`[FH-rol] onAuthStateChange evento=${evento} userId=${nuevaSesion?.user.id}`);
       setSesion(nuevaSesion);
     });
     return () => suscripcion.subscription.unsubscribe();
@@ -98,8 +102,13 @@ export default function App() {
     const ESPERA_REINTENTO_MS = 600;
     const MAX_INTENTOS = 3;
     const cargar = async (intento: number): Promise<void> => {
-      const p = await obtenerPerfil(userId);
-      if (cancelado) return;
+      console.debug(`[FH-rol] intento ${intento} para userId=${userId}`);
+      const p = await obtenerPerfil(userId).catch((err) => {
+        console.debug('[FH-rol] obtenerPerfil lanzó una excepción', err);
+        return null;
+      });
+      console.debug(`[FH-rol] intento ${intento} resultado:`, p);
+      if (cancelado) { console.debug(`[FH-rol] intento ${intento} ignorado (cancelado)`); return; }
       if (!p) {
         // Justo después de recargar la página el token puede estar revalidándose todavía:
         // reintentamos un par de veces antes de resignarnos a "viewer".
@@ -108,11 +117,13 @@ export default function App() {
           if (!cancelado) await cargar(intento + 1);
           return;
         }
+        console.debug('[FH-rol] se agotaron los reintentos, queda en viewer');
         setRol('viewer');
         setAvatarUrl(null);
         setCargandoPerfil(false);
         return;
       }
+      console.debug(`[FH-rol] rol resuelto: ${p.rol}`);
       setRol(p.rol);
       setAvatarUrl(p.avatarUrl);
       setCargandoPerfil(false);
