@@ -88,15 +88,17 @@ export default function App() {
     return () => suscripcion.subscription.unsubscribe();
   }, []);
 
+  const userId = sesion?.user.id ?? null;
+
   useEffect(() => {
     if (!supabaseDisponible) return;
-    if (!sesion) { setRol('viewer'); setAvatarUrl(null); setCargandoPerfil(false); return; }
+    if (!userId) { setRol('viewer'); setAvatarUrl(null); setCargandoPerfil(false); return; }
     let cancelado = false;
     setCargandoPerfil(true);
     const ESPERA_REINTENTO_MS = 600;
     const MAX_INTENTOS = 3;
     const cargar = async (intento: number): Promise<void> => {
-      const p = await obtenerPerfil(sesion.user.id);
+      const p = await obtenerPerfil(userId);
       if (cancelado) return;
       if (!p) {
         // Justo después de recargar la página el token puede estar revalidándose todavía:
@@ -117,10 +119,10 @@ export default function App() {
     };
     cargar(0);
     return () => { cancelado = true; };
-  }, [sesion]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!supabaseDisponible || !sesion) return;
+    if (!supabaseDisponible || !userId) return;
     let cancelado = false;
     (async () => {
       try {
@@ -138,7 +140,7 @@ export default function App() {
       }
     })();
     return () => { cancelado = true; };
-  }, [sesion]);
+  }, [userId]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
