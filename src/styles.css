@@ -464,14 +464,14 @@
 
   /* ---------- Configuración ---------- */
   .settings-grid{display:flex;flex-direction:column;gap:16px;max-width:640px;}
-  .settings-card h3{margin-bottom:10px;}
+  .settings-card h3{margin-bottom:10px;font-size:14px;}
   .settings-row{
     display:flex;align-items:center;justify-content:space-between;gap:16px;
     padding:12px 0;border-top:1px solid var(--line);
   }
   .settings-row:first-of-type{border-top:none;padding-top:0;}
-  .settings-label{font-weight:600;color:var(--ink);font-size:13.5px;}
-  .settings-hint{font-size:12px;color:var(--muted);margin-top:2px;max-width:360px;}
+  .settings-label{font-weight:600;color:var(--ink);font-size:12.5px;}
+  .settings-hint{font-size:11px;color:var(--muted);margin-top:2px;max-width:360px;}
 
   /* ---------- Table ---------- */
   .table-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
