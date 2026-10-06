@@ -748,13 +748,14 @@
   /* ---------- Documento de Informe (híbrido ejecutivo + visual) ---------- */
   .report-doc{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);
-    box-shadow:var(--shadow-card);padding:32px 34px;margin-top:4px;
+    box-shadow:var(--shadow-card);padding:22px 34px 32px;margin-top:4px;
   }
   .rd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
-    padding-bottom:22px;border-bottom:2px solid var(--maroon);margin-bottom:24px;flex-wrap:wrap;}
+    padding-bottom:16px;border-bottom:2px solid var(--maroon);margin-bottom:18px;flex-wrap:wrap;}
   .rd-brand{display:flex;align-items:center;gap:16px;}
-  .rd-logo{width:76px;height:76px;border-radius:50%;border:2px solid var(--maroon);background:#fff;
-    display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+  /* El logo redundaría con el de la barra lateral en pantalla; solo se muestra al imprimir/exportar el informe como documento independiente. */
+  .rd-logo{display:none;width:76px;height:76px;border-radius:50%;border:2px solid var(--maroon);background:#fff;
+    align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
   .rd-logo img{width:82%;height:82%;object-fit:contain;}
   .rd-title{font-family:var(--font-serif);font-weight:600;font-size:22px;color:var(--ink);letter-spacing:-.01em;line-height:1.1;}
   .rd-period{font-size:12.5px;color:var(--maroon);font-weight:700;margin-top:4px;}
@@ -893,6 +894,7 @@
     section.view{display:none !important;}
     section.view#view-analitica{display:block !important;}
     .report-doc{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;}
+    .rd-logo{display:flex !important;}
     .rd-charts{break-inside:avoid;}
     .rd-chart-card, .table-card, .rd-hl{break-inside:avoid;}
     .rd-hl{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
