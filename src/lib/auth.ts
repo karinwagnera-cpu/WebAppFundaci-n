@@ -25,6 +25,13 @@ export interface Perfil {
  */
 export async function obtenerPerfil(userId: string): Promise<Perfil | null> {
   if (!supabase) return { rol: 'viewer', avatarUrl: null };
+  // getUser() valida el token contra el servidor (y lo renueva si hace falta) antes de
+  // seguir. Justo después de recargar la página, el token guardado en localStorage puede
+  // estar vencido o por renovarse; usar directamente getSession()/una consulta corriendo
+  // en paralelo con esa renovación es lo que generaba la carrera que mostraba "Solo lectura"
+  // por un instante.
+  const { error: userError } = await supabase.auth.getUser();
+  if (userError) return null;
   const { data, error } = await supabase.from('perfiles').select('rol, avatar_url').eq('id', userId).single();
   if (error || !data) return null;
   return { rol: data.rol === 'admin' ? 'admin' : 'viewer', avatarUrl: data.avatar_url ?? null };
