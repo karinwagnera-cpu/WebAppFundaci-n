@@ -3,12 +3,13 @@ import type { Registro, RegistroForm } from '../types';
 import { EJES, ESTADOS_ACCION, ESTADO_ACCION_LABEL, TIPOS, UNIDADES, normalizarEstadoAccion } from '../lib/constants';
 import { humanSize, parseUnidades, tituloEje } from '../lib/format';
 import { subirAdjunto } from '../lib/storage';
+import { notificar } from '../lib/notificaciones';
 import Icon from '../components/Icon';
 
 interface Props {
   registro: Registro | null;
   fechaInicial?: string;
-  onGuardar: (form: RegistroForm) => void;
+  onGuardar: (form: RegistroForm) => void | Promise<void>;
   onEliminar: (id: number) => void;
   onCerrar: () => void;
 }
@@ -42,8 +43,15 @@ const vacio = (r: Registro | null, fechaInicial?: string): RegistroForm => {
 export default function RegistroModal({ registro, fechaInicial, onGuardar, onEliminar, onCerrar }: Props) {
   const [form, setForm] = useState<RegistroForm>(() => vacio(registro, fechaInicial));
   const [subiendo, setSubiendo] = useState<'fotos' | 'consts' | null>(null);
+  const [guardando, setGuardando] = useState(false);
   const set = <K extends keyof RegistroForm>(key: K, value: RegistroForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const enviar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try { await onGuardar(form); } finally { setGuardando(false); }
+  };
 
   const agregar = async (key: 'fotos' | 'consts', files: FileList | null) => {
     if (!files || !files.length) return;
@@ -58,7 +66,7 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
       }
     }
     setSubiendo(null);
-    if (errores.length) alert(errores.join('\n'));
+    if (errores.length) notificar(errores.join('\n'));
   };
   const quitar = (key: 'fotos' | 'consts', idx: number) =>
     setForm((f) => ({ ...f, [key]: f[key].filter((_, i) => i !== idx) }));
@@ -90,7 +98,7 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
       <div className="modal">
         <h2>{form.editingId ? 'Editar registro' : 'Nuevo registro'}</h2>
         <div className="modal-sub">Completá los campos según el diccionario de datos de la Fundación.</div>
-        <form onSubmit={(e) => { e.preventDefault(); onGuardar(form); }}>
+        <form onSubmit={enviar}>
           <div className="form-section-title">Datos de la acción</div>
           <div className="ux-grid">
             <div className="field c3">
@@ -224,8 +232,8 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
                 Eliminar registro
               </button>
             )}
-            <button type="button" className="btn secondary" onClick={onCerrar}>Cancelar</button>
-            <button type="submit" className="btn">Guardar</button>
+            <button type="button" className="btn secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
+            <button type="submit" className="btn" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
           </div>
         </form>
       </div>

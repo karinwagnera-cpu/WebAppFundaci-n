@@ -14,10 +14,13 @@ import { cerrarSesion, obtenerPerfil } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
 import { mensajeError } from './lib/format';
+import { confirmar, notificar } from './lib/notificaciones';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import PerfilMenu from './components/PerfilMenu';
+import Toast from './components/Toast';
+import ConfirmDialog from './components/ConfirmDialog';
 import Dashboard from './views/Dashboard';
 import RegistroView from './views/Registro';
 import Campanas from './views/Campanas';
@@ -154,7 +157,7 @@ export default function App() {
   }, [avisarGuardado]);
 
   const guardarCampania = async (form: CampaniaForm) => {
-    if (!form.nombre.trim()) { alert('Poné un nombre a la campaña.'); return; }
+    if (!form.nombre.trim()) { notificar('Poné un nombre a la campaña.'); return; }
 
     const errores: string[] = [];
     const nums: Array<[string, string]> = [
@@ -167,7 +170,7 @@ export default function App() {
     }
     if (form.inicio && form.fin && form.fin < form.inicio) errores.push('La fecha de fin no puede ser anterior a la de inicio.');
     if (errores.length) {
-      alert('Revisá estos datos antes de guardar:\n\n- ' + errores.join('\n- '));
+      notificar('Revisá estos datos antes de guardar:\n- ' + errores.join('\n- '));
       return;
     }
 
@@ -188,19 +191,20 @@ export default function App() {
     try {
       await upsertCampaniaRemoto(camp);
     } catch (err) {
-      alert('No se pudo guardar la campaña en la base compartida: ' + mensajeError(err));
+      notificar('No se pudo guardar la campaña en la base compartida: ' + mensajeError(err));
       return;
     }
     persistirCampanas(form.editingId ? campanas.map((c) => (c.id === id ? camp : c)) : [...campanas, camp]);
     setEditandoCampania(null);
+    notificar('Campaña guardada.', 'ok');
   };
 
   const eliminarCampania = async (id: number) => {
-    if (!confirm('Se eliminará esta campaña. Esta acción no se puede deshacer.')) return;
+    if (!await confirmar({ mensaje: 'Se eliminará esta campaña. Esta acción no se puede deshacer.', peligroso: true, textoConfirmar: 'Eliminar' })) return;
     try {
       await deleteCampaniaRemoto(id);
     } catch (err) {
-      alert('No se pudo eliminar la campaña: ' + mensajeError(err));
+      notificar('No se pudo eliminar la campaña: ' + mensajeError(err));
       return;
     }
     persistirCampanas(campanas.filter((c) => c.id !== id));
@@ -214,7 +218,7 @@ export default function App() {
     if (!form.eje) faltan.push('Eje estratégico');
     if (!form.unidad) faltan.push('Unidad de negocio');
     if (faltan.length) {
-      alert('Faltan completar campos obligatorios:\n\n- ' + faltan.join('\n- '));
+      notificar('Faltan completar campos obligatorios:\n- ' + faltan.join('\n- '));
       return;
     }
 
@@ -229,18 +233,18 @@ export default function App() {
     if (form.horas !== '' && Number(form.horas) < 0) errores.push('Las horas no pueden ser negativas.');
     if (form.ejeSecundario && form.ejeSecundario === form.eje) errores.push('El eje secundario no puede ser igual al principal.');
     if (errores.length) {
-      alert('Revisá estos datos antes de guardar:\n\n- ' + errores.join('\n- '));
+      notificar('Revisá estos datos antes de guardar:\n- ' + errores.join('\n- '));
       return;
     }
     if (form.horas !== '' && Number(form.horas) > 1000 &&
-        !confirm(`Cargaste ${form.horas} horas de voluntariado, ¿es correcto?`)) return;
+        !await confirmar({ mensaje: `Cargaste ${form.horas} horas de voluntariado, ¿es correcto?` })) return;
 
     if (!form.editingId) {
       const objetivo = normalizar(form.beneficiario);
       const parecidos = registros.filter((r) => normalizar(r.beneficiario) && normalizar(r.beneficiario) === objetivo);
       if (parecidos.length) {
         const muestra = parecidos.slice(0, 3).map((r) => r.beneficiario + (r.fecha ? ` (${r.fecha})` : '')).join(', ');
-        if (!confirm(`Ya hay ${parecidos.length} registro(s) con un beneficiario muy parecido a "${form.beneficiario}": ${muestra}. ¿Guardar igual?`)) return;
+        if (!await confirmar({ mensaje: `Ya hay ${parecidos.length} registro(s) con un beneficiario muy parecido a "${form.beneficiario}": ${muestra}.\n\n¿Guardar igual?` })) return;
       }
     }
 
@@ -273,20 +277,21 @@ export default function App() {
     try {
       await upsertRegistroRemoto(rec);
     } catch (err) {
-      alert('No se pudo guardar el registro en la base compartida: ' + mensajeError(err));
+      notificar('No se pudo guardar el registro en la base compartida: ' + mensajeError(err));
       return;
     }
     persistirRegistros(form.editingId ? registros.map((r) => (r.id === id ? rec : r)) : [...registros, rec]);
     setEditando(null);
+    notificar('Registro guardado.', 'ok');
   };
 
   const eliminarRegistro = async (id: number) => {
-    if (!confirm('Se eliminará este registro y su documentación adjunta. Esta acción no se puede deshacer.')) return;
+    if (!await confirmar({ mensaje: 'Se eliminará este registro y su documentación adjunta. Esta acción no se puede deshacer.', peligroso: true, textoConfirmar: 'Eliminar' })) return;
     const registro = registros.find((r) => r.id === id);
     try {
       await deleteRegistroRemoto(id);
     } catch (err) {
-      alert('No se pudo eliminar el registro: ' + mensajeError(err));
+      notificar('No se pudo eliminar el registro: ' + mensajeError(err));
       return;
     }
     if (registro) await eliminarAdjuntosStorage([...(registro.fotos ?? []), ...(registro.consts ?? [])]);
@@ -295,8 +300,8 @@ export default function App() {
   };
 
   const guardarDoc = (form: DocForm) => {
-    if (!form.file) { alert('Elegí un archivo antes de subir.'); return; }
-    if (!form.nombre.trim()) { alert('Poné un nombre al documento.'); return; }
+    if (!form.file) { notificar('Elegí un archivo antes de subir.'); return; }
+    if (!form.nombre.trim()) { notificar('Poné un nombre al documento.'); return; }
     const id = docs.reduce((m, d) => Math.max(m, d.id || 0), 0) + 1;
     persistirDocs([...docs, {
       id, nombre: form.nombre.trim(), categoria: form.categoria, fecha: form.fecha || null,
@@ -307,7 +312,7 @@ export default function App() {
 
   const verDoc = (id: number) => {
     const d = docs.find((x) => x.id === id);
-    if (!d) { alert('No se pudo recuperar el archivo.'); return; }
+    if (!d) { notificar('No se pudo recuperar el archivo.'); return; }
     const a = document.createElement('a');
     a.href = d.data;
     a.download = d.nombre;
@@ -317,8 +322,8 @@ export default function App() {
     a.remove();
   };
 
-  const eliminarDoc = (id: number) => {
-    if (!confirm('Se eliminará este documento. Esta acción no se puede deshacer.')) return;
+  const eliminarDoc = async (id: number) => {
+    if (!await confirmar({ mensaje: 'Se eliminará este documento. Esta acción no se puede deshacer.', peligroso: true, textoConfirmar: 'Eliminar' })) return;
     persistirDocs(docs.filter((d) => d.id !== id));
   };
 
@@ -336,12 +341,17 @@ export default function App() {
       try {
         const p = JSON.parse(String(rd.result)) as { registros?: Registro[]; docs?: DocMeta[] };
         if (!p.registros || !Array.isArray(p.registros)) throw new Error('formato');
+        if (!await confirmar({
+          mensaje: `Esto reemplaza los registros de TODOS los usuarios por los ${p.registros.length} de esta copia de seguridad. Esta acción no se puede deshacer.`,
+          peligroso: true, textoConfirmar: 'Reemplazar datos',
+        })) return;
         await reemplazarRegistrosRemoto(p.registros);
         persistirRegistros(p.registros);
         if (Array.isArray(p.docs)) persistirDocs(p.docs);
         setPerfilAbierto(false);
+        notificar('Copia de seguridad restaurada.', 'ok');
       } catch (err) {
-        alert(err instanceof Error && err.message === 'formato'
+        notificar(err instanceof Error && err.message === 'formato'
           ? 'El archivo no parece una copia de seguridad válida.'
           : 'No se pudo importar en la base compartida: ' + mensajeError(err));
       }
@@ -350,15 +360,20 @@ export default function App() {
   };
 
   const reiniciar = async () => {
-    if (!confirm(`Se descartan los cambios de todos los usuarios y se vuelve al histórico original (${SEED_REGISTROS.length} registros).`)) return;
+    if (!await confirmar({
+      titulo: 'Restablecer al histórico original',
+      mensaje: `Se descartan los cambios de TODOS los usuarios y se vuelve al histórico original (${SEED_REGISTROS.length} registros). Esta acción no se puede deshacer.`,
+      peligroso: true, textoConfirmar: 'Restablecer', requiereTexto: 'REINICIAR',
+    })) return;
     try {
       await reemplazarRegistrosRemoto(SEED_REGISTROS);
     } catch (err) {
-      alert('No se pudo reiniciar la base compartida: ' + mensajeError(err));
+      notificar('No se pudo reiniciar la base compartida: ' + mensajeError(err));
       return;
     }
     persistirRegistros(SEED_REGISTROS);
     setPerfilAbierto(false);
+    notificar('Base de datos restablecida al histórico original.', 'ok');
   };
 
   const importarExcel = async (file: File) => {
@@ -367,38 +382,45 @@ export default function App() {
     try {
       resultado = await parseExcelRegistros(file, proximoId);
     } catch (err) {
-      alert('No se pudo leer el archivo: ' + mensajeError(err));
+      notificar('No se pudo leer el archivo: ' + mensajeError(err));
       return;
     }
     const { validos, errores } = resultado;
     if (!validos.length) {
-      alert(errores.length
-        ? 'No se importó ningún registro. Errores:\n\n- ' + errores.map((e) => `Fila ${e.fila}: ${e.motivo}`).join('\n- ')
+      notificar(errores.length
+        ? 'No se importó ningún registro. Errores:\n- ' + errores.map((e) => `Fila ${e.fila}: ${e.motivo}`).join('\n- ')
         : 'El archivo no tiene filas con datos.');
       return;
     }
-    if (errores.length && !confirm(
-      `Se importarán ${validos.length} registro(s) válidos.\n\n` +
-      `${errores.length} fila(s) tienen errores y se van a omitir:\n- ` +
-      errores.slice(0, 10).map((e) => `Fila ${e.fila}: ${e.motivo}`).join('\n- ') +
-      (errores.length > 10 ? `\n… y ${errores.length - 10} más.` : '') +
-      '\n\n¿Continuar con la importación de los registros válidos?'
-    )) return;
+    if (errores.length && !await confirmar({
+      mensaje: `Se importarán ${validos.length} registro(s) válidos.\n\n` +
+        `${errores.length} fila(s) tienen errores y se van a omitir:\n- ` +
+        errores.slice(0, 10).map((e) => `Fila ${e.fila}: ${e.motivo}`).join('\n- ') +
+        (errores.length > 10 ? `\n… y ${errores.length - 10} más.` : '') +
+        '\n\n¿Continuar con la importación de los registros válidos?',
+      textoConfirmar: 'Importar',
+    })) return;
 
     try {
       await insertarRegistrosRemoto(validos);
     } catch (err) {
-      alert('No se pudo importar en la base compartida: ' + mensajeError(err));
+      notificar('No se pudo importar en la base compartida: ' + mensajeError(err));
       return;
     }
     persistirRegistros([...registros, ...validos]);
-    alert(`Se importaron ${validos.length} registro(s) correctamente.` + (errores.length ? ` (${errores.length} fila(s) omitidas por errores).` : ''));
+    notificar(`Se importaron ${validos.length} registro(s) correctamente.` + (errores.length ? ` (${errores.length} fila(s) omitidas por errores).` : ''), 'ok');
   };
 
   const irA = (v: Vista) => { setVista(v); setMenuAbierto(false); setPerfilAbierto(false); };
   const detalle = detalleId ? registros.find((r) => r.id === detalleId) ?? null : null;
 
-  if (supabaseDisponible && cargandoSesion) return null;
+  if (supabaseDisponible && cargandoSesion) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-spinner" />
+      </div>
+    );
+  }
   if (supabaseDisponible && !sesion) return <Login />;
 
   return (
@@ -540,6 +562,8 @@ export default function App() {
           onCerrar={() => setEditandoCampania(null)}
         />
       )}
+      <ConfirmDialog />
+      <Toast />
     </div>
   );
 }

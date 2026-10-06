@@ -5,7 +5,7 @@ import { tituloEje } from '../lib/format';
 
 interface Props {
   campania: Campania | null;
-  onGuardar: (form: CampaniaForm) => void;
+  onGuardar: (form: CampaniaForm) => void | Promise<void>;
   onEliminar: (id: number) => void;
   onCerrar: () => void;
 }
@@ -26,15 +26,22 @@ const vacio = (c: Campania | null): CampaniaForm => ({
 
 export default function CampaniaModal({ campania, onGuardar, onEliminar, onCerrar }: Props) {
   const [form, setForm] = useState<CampaniaForm>(() => vacio(campania));
+  const [guardando, setGuardando] = useState(false);
   const set = <K extends keyof CampaniaForm>(key: K, value: CampaniaForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const enviar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try { await onGuardar(form); } finally { setGuardando(false); }
+  };
 
   return (
     <div className="modal-backdrop show" onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
       <div className="modal">
         <h2>{form.editingId ? 'Editar campaña' : 'Nueva campaña'}</h2>
         <div className="modal-sub">Las campañas se cargan aparte, no están vinculadas a registros individuales.</div>
-        <form onSubmit={(e) => { e.preventDefault(); onGuardar(form); }}>
+        <form onSubmit={enviar}>
           <div className="form-section-title">Datos generales</div>
           <div className="ux-grid">
             <div className="field c8">
@@ -93,8 +100,8 @@ export default function CampaniaModal({ campania, onGuardar, onEliminar, onCerra
                 Eliminar campaña
               </button>
             )}
-            <button type="button" className="btn secondary" onClick={onCerrar}>Cancelar</button>
-            <button type="submit" className="btn">Guardar</button>
+            <button type="button" className="btn secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
+            <button type="submit" className="btn" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
           </div>
         </form>
       </div>

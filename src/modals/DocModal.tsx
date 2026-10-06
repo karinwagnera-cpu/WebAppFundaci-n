@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { DocForm } from '../types';
 import { DOC_CATEGORIAS } from '../lib/constants';
 import { leerArchivoLocal } from '../lib/storage';
+import { notificar } from '../lib/notificaciones';
 
 interface Props {
   onGuardar: (form: DocForm) => void;
@@ -20,7 +21,7 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
       const adj = await leerArchivoLocal(file);
       setForm((f) => ({ ...f, file: adj, nombre: f.nombre || file.name.replace(/\.[^.]+$/, '') }));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'No se pudo cargar el archivo.');
+      notificar(err instanceof Error ? err.message : 'No se pudo cargar el archivo.');
     }
   };
 
@@ -34,14 +35,14 @@ export default function DocModal({ onGuardar, onCerrar }: Props) {
             <div className="field full">
               <label htmlFor="docArchivo">Archivo *</label>
               <input
-                id="docArchivo" type="file" required
+                id="docArchivo" type="file"
                 accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
                 onChange={(e) => elegir(e.target.files)}
               />
             </div>
             <div className="field full">
               <label htmlFor="docNombre">Nombre del documento *</label>
-              <input id="docNombre" type="text" required value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} />
+              <input id="docNombre" type="text" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} />
             </div>
             <div className="field">
               <label htmlFor="docCategoria">Categoría *</label>

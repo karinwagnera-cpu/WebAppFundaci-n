@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cambiarPassword, subirAvatar } from '../lib/auth';
 import { mensajeError } from '../lib/format';
+import { notificar } from '../lib/notificaciones';
 
 interface Props {
   userId: string;
@@ -23,8 +24,9 @@ export default function PerfilUsuarioModal({ userId, email, avatarUrl, onAvatarA
     try {
       const url = await subirAvatar(file, userId);
       onAvatarActualizado(url);
+      notificar('Foto de perfil actualizada.', 'ok');
     } catch (err) {
-      alert(mensajeError(err));
+      notificar(mensajeError(err));
     } finally {
       setSubiendo(false);
     }
