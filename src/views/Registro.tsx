@@ -199,8 +199,10 @@ export default function RegistroView({
             <thead>
               <tr>
                 <th className="col-fila">
-                  <input type="checkbox" checked={todoSeleccionado} onChange={toggleTodo} aria-label="Seleccionar todo" />{' '}
-                  <span>Fila</span>
+                  <span className="th-inline">
+                    <input type="checkbox" checked={todoSeleccionado} onChange={toggleTodo} aria-label="Seleccionar todo" />
+                    <span>Fila</span>
+                  </span>
                 </th>
                 {COLUMNAS.map((c) => (
                   <th key={c.col} className={c.num ? 'num' : ''}>
