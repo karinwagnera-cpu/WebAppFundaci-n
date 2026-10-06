@@ -174,8 +174,8 @@
     height:32px;
   }
   .navbar-search svg{width:17px;height:17px;color:var(--muted);flex-shrink:0;}
-  .navbar-search input{border:none;background:transparent;flex:1;font-size:14px;line-height:1;color:var(--ink);min-width:0;}
-  .navbar-search input:focus{outline:none;}
+  .navbar-search input[type=text]{border:none;background:transparent;padding:0;border-radius:0;flex:1;font-size:14px;line-height:1;color:var(--ink);min-width:0;}
+  .navbar-search input[type=text]:focus{outline:none;}
   .navbar-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
 
   .hamburger{
