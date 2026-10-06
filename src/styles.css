@@ -119,7 +119,7 @@
   /* ---------- App shell ---------- */
   /* ---------- LAYOUT: sidebar + main ---------- */
   #app{display:flex;height:100vh;overflow:hidden;}
-  :root{ --sidebar-w:92px; --navbar-h:64px; }
+  :root{ --sidebar-w:76px; --navbar-h:64px; }
 
   .sidebar{
     width:var(--sidebar-w);flex-shrink:0;
