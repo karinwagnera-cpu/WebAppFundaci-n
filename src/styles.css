@@ -819,6 +819,7 @@
   /* ---------- Calendario ---------- */
   .cal-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
   .cal-nav{display:flex;align-items:center;gap:10px;}
+  .cal-nav .icon-btn{width:32px;height:32px;min-width:32px;min-height:32px;}
   .cal-period{font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--ink);min-width:190px;text-transform:capitalize;}
   .cal-viewtoggle{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px;}
   .cal-vt{border:none;background:none;cursor:pointer;padding:6px 14px;border-radius:8px;font-family:var(--font-display);font-weight:700;font-size:11.5px;color:var(--ink-soft);transition:background .12s ease,color .12s ease;}
