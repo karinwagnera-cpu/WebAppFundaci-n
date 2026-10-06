@@ -252,13 +252,12 @@ export default function RegistroView({
                     )}
                   </td>
                   <td>{r.tipo || '—'}</td>
-                  <td>
+                  <td title={r.ejeSecundario ? `Eje secundario: ${tituloEje(r.ejeSecundario)}` : undefined}>
                     {tituloEje(r.eje)}
-                    {r.ejeSecundario && <span className="eje-sec"> + {tituloEje(r.ejeSecundario)}</span>}
                   </td>
                   <td>{tituloTexto(r.unidad) || '—'}</td>
                   <td>{tituloTexto(r.beneficiario) || '—'}</td>
-                  <td className="wrap">{tituloTexto(r.aporte) || '—'}</td>
+                  <td className="wrap" title={tituloTexto(r.aporte) || undefined}>{tituloTexto(r.aporte) || '—'}</td>
                   <td className="num">{num(r.costo) ? fmtMoney(r.costo) : '—'}</td>
                   <td className="num">{num(r.inversion) ? fmtMoney(r.inversion) : '—'}</td>
                   <td className="num">{num(r.horas) ? r.horas : '—'}</td>

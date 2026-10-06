@@ -504,8 +504,10 @@
   .table-scroll.reg::-webkit-scrollbar-thumb:hover{background:var(--taupe);}
   .table-scroll.reg table{min-width:1080px;border-collapse:separate;border-spacing:0;}
   .table-scroll.reg th, .table-scroll.reg td{white-space:nowrap;}
-  .table-scroll.reg td.wrap{white-space:normal;min-width:180px;max-width:240px;}
-  .eje-sec{color:var(--muted);font-size:12px;}
+  .table-scroll.reg td.wrap{
+    white-space:normal;min-width:180px;max-width:240px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
   /* primera y última columna fijas al hacer scroll horizontal */
   .table-scroll.reg th:first-child, .table-scroll.reg td:first-child{
     position:sticky;left:0;background:var(--panel);z-index:2;
