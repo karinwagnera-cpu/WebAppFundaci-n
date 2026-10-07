@@ -7,6 +7,15 @@ export async function iniciarSesion(email: string, password: string): Promise<vo
   if (error) throw error;
 }
 
+export async function iniciarSesionGoogle(): Promise<void> {
+  if (!supabase) throw new Error('Supabase no está configurado.');
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) throw error;
+}
+
 export async function cerrarSesion(): Promise<void> {
   if (!supabase) return;
   await supabase.auth.signOut();

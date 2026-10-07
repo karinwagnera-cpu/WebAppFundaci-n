@@ -983,6 +983,16 @@
     padding:9px 12px;font-size:13px;margin-bottom:14px;text-align:left;
   }
   .login-hint{font-size:12px;color:var(--muted);margin:16px 0 0;}
+  .btn-google{
+    width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+    height:40px;border-radius:var(--radius-pill);border:1px solid var(--line-strong);
+    background:var(--panel);color:var(--ink-soft);font-family:var(--font-display);font-weight:600;font-size:13px;
+    cursor:pointer;transition:border-color .15s ease, background .15s ease;
+  }
+  .btn-google:hover{border-color:var(--maroon);background:var(--panel-2);}
+  .btn-google:disabled{opacity:0.6;cursor:default;}
+  .login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--muted);font-size:12px;}
+  .login-divider::before, .login-divider::after{content:'';flex:1;height:1px;background:var(--line);}
 
   /* ---------- Carga inicial de sesión ---------- */
   .app-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
