@@ -11,7 +11,7 @@ export type IconName =
   | 'search' | 'sun' | 'moon' | 'filter' | 'caret' | 'chevronLeft' | 'chevronRight'
   | 'check' | 'heart' | 'users' | 'clock' | 'money' | 'plus' | 'download' | 'print'
   | 'photo' | 'file' | 'eye' | 'upload' | 'scrollx'
-  | 'campanas' | 'settings' | 'trash' | 'edit' | 'close' | 'chart';
+  | 'campanas' | 'settings' | 'trash' | 'edit' | 'close' | 'chart' | 'mail' | 'lock';
 
 const PATHS: Record<IconName, ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>,
@@ -45,6 +45,8 @@ const PATHS: Record<IconName, ReactNode> = {
   edit: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
   close: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
   chart: <><line x1="4" y1="20" x2="20" y2="20" /><rect x="6" y="12" width="3" height="8" /><rect x="13" y="7" width="3" height="13" /></>,
+  mail: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M2 6l10 7 10-7" /></>,
+  lock: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
 };
 
 export default function Icon({ name, className = 'icon', size }: Props) {
