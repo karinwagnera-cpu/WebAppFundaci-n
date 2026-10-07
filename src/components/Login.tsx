@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { iniciarSesion, iniciarSesionGoogle } from '../lib/auth';
+import { escenaLogin } from '../lib/loginScene';
 import Icon from './Icon';
 import logo from '../assets/logo.jpg';
+
+const ESTRELLAS = [
+  [30, 24, 1.4, 0.8], [64, 44, 1, 0.5], [110, 20, 1.6, 0.7], [150, 50, 1, 0.4],
+  [280, 30, 1.3, 0.6], [320, 54, 1, 0.5], [360, 22, 1.5, 0.8], [20, 60, 1, 0.4],
+  [95, 66, 1.1, 0.5], [250, 60, 1, 0.4], [340, 70, 1.2, 0.6], [180, 18, 1, 0.5],
+] as const;
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,6 +16,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [conGoogle, setConGoogle] = useState(false);
+  const [escena] = useState(() => escenaLogin());
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,27 +49,30 @@ export default function Login() {
           <svg viewBox="0 0 400 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
             <defs>
               <linearGradient id="loginSky" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#591827" />
-                <stop offset="55%" stopColor="#6E1F32" />
-                <stop offset="100%" stopColor="#B4863C" />
+                <stop offset="0%" stopColor={escena.cielo[0]} />
+                <stop offset="55%" stopColor={escena.cielo[1]} />
+                <stop offset="100%" stopColor={escena.cielo[2]} />
               </linearGradient>
-              <radialGradient id="loginSun" cx="50%" cy="45%" r="55%">
-                <stop offset="0%" stopColor="#FBF9F5" />
-                <stop offset="100%" stopColor="#B4863C" />
+              <radialGradient id="loginAstro" cx="50%" cy="45%" r="55%">
+                <stop offset="0%" stopColor={escena.astroCentro} />
+                <stop offset="100%" stopColor={escena.astroBorde} />
               </radialGradient>
             </defs>
             <rect x="0" y="0" width="400" height="230" fill="url(#loginSky)" />
-            <circle cx="200" cy="72" r="56" fill="#B4863C" opacity="0.22" />
-            <circle cx="200" cy="72" r="32" fill="url(#loginSun)" />
-            {[
-              [30, 24, 1.4, 0.8], [64, 44, 1, 0.5], [110, 20, 1.6, 0.7], [150, 50, 1, 0.4],
-              [280, 30, 1.3, 0.6], [320, 54, 1, 0.5], [360, 22, 1.5, 0.8], [20, 60, 1, 0.4],
-              [95, 66, 1.1, 0.5], [250, 60, 1, 0.4], [340, 70, 1.2, 0.6], [180, 18, 1, 0.5],
-            ].map(([cx, cy, r, o], i) => (
+            <circle cx="200" cy="72" r="56" fill={escena.glow} opacity={escena.glowOpacidad} />
+            <circle cx="200" cy="72" r="32" fill="url(#loginAstro)" />
+            {escena.astro === 'luna' && (
+              <>
+                <circle cx="211" cy="62" r="5" fill={escena.astroBorde} opacity="0.5" />
+                <circle cx="190" cy="80" r="3.5" fill={escena.astroBorde} opacity="0.5" />
+                <circle cx="195" cy="60" r="2.5" fill={escena.astroBorde} opacity="0.4" />
+              </>
+            )}
+            {ESTRELLAS.slice(0, escena.estrellas).map(([cx, cy, r, o], i) => (
               <circle key={i} cx={cx} cy={cy} r={r} fill="#FBF9F5" opacity={o} />
             ))}
-            <path d="M0,150 L40,120 L80,140 L130,100 L180,135 L230,105 L280,140 L330,110 L370,138 L400,120 L400,230 L0,230 Z" fill="#A6624B" opacity="0.9" />
-            <path d="M0,185 L50,150 L100,180 L160,135 L220,178 L270,145 L330,183 L380,155 L400,170 L400,230 L0,230 Z" fill="#591827" />
+            <path d="M0,150 L40,120 L80,140 L130,100 L180,135 L230,105 L280,140 L330,110 L370,138 L400,120 L400,230 L0,230 Z" fill={escena.montaniaFondo} opacity="0.9" />
+            <path d="M0,185 L50,150 L100,180 L160,135 L220,178 L270,145 L330,183 L380,155 L400,170 L400,230 L0,230 Z" fill={escena.montaniaFrente} />
           </svg>
           <div className="login-brand">
             <div className="login-logo"><img src={logo} alt="Fundación Huentala" /></div>
