@@ -41,27 +41,27 @@ export default function Login() {
           <svg viewBox="0 0 400 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
             <defs>
               <linearGradient id="loginSky" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3A1220" />
-                <stop offset="55%" stopColor="#7A2740" />
-                <stop offset="100%" stopColor="#DDA868" />
+                <stop offset="0%" stopColor="#591827" />
+                <stop offset="55%" stopColor="#6E1F32" />
+                <stop offset="100%" stopColor="#B4863C" />
               </linearGradient>
               <radialGradient id="loginSun" cx="50%" cy="45%" r="55%">
-                <stop offset="0%" stopColor="#FFF6E0" />
-                <stop offset="100%" stopColor="#EAA868" />
+                <stop offset="0%" stopColor="#FBF9F5" />
+                <stop offset="100%" stopColor="#B4863C" />
               </radialGradient>
             </defs>
             <rect x="0" y="0" width="400" height="230" fill="url(#loginSky)" />
-            <circle cx="200" cy="72" r="56" fill="#F3B477" opacity="0.22" />
+            <circle cx="200" cy="72" r="56" fill="#B4863C" opacity="0.22" />
             <circle cx="200" cy="72" r="32" fill="url(#loginSun)" />
             {[
               [30, 24, 1.4, 0.8], [64, 44, 1, 0.5], [110, 20, 1.6, 0.7], [150, 50, 1, 0.4],
               [280, 30, 1.3, 0.6], [320, 54, 1, 0.5], [360, 22, 1.5, 0.8], [20, 60, 1, 0.4],
               [95, 66, 1.1, 0.5], [250, 60, 1, 0.4], [340, 70, 1.2, 0.6], [180, 18, 1, 0.5],
             ].map(([cx, cy, r, o], i) => (
-              <circle key={i} cx={cx} cy={cy} r={r} fill="#FFF3DD" opacity={o} />
+              <circle key={i} cx={cx} cy={cy} r={r} fill="#FBF9F5" opacity={o} />
             ))}
-            <path d="M0,150 L40,120 L80,140 L130,100 L180,135 L230,105 L280,140 L330,110 L370,138 L400,120 L400,230 L0,230 Z" fill="#8B3350" opacity="0.9" />
-            <path d="M0,185 L50,150 L100,180 L160,135 L220,178 L270,145 L330,183 L380,155 L400,170 L400,230 L0,230 Z" fill="#3A1420" />
+            <path d="M0,150 L40,120 L80,140 L130,100 L180,135 L230,105 L280,140 L330,110 L370,138 L400,120 L400,230 L0,230 Z" fill="#A6624B" opacity="0.9" />
+            <path d="M0,185 L50,150 L100,180 L160,135 L220,178 L270,145 L330,183 L380,155 L400,170 L400,230 L0,230 Z" fill="#591827" />
           </svg>
           <div className="login-brand">
             <div className="login-logo"><img src={logo} alt="Fundación Huentala" /></div>

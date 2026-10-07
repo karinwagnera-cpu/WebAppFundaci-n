@@ -967,11 +967,11 @@
   /* Pantalla de login: estética propia (atardecer sobre los Andes), fija en ambos temas. */
   .login-wrap{
     min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#200C14;padding:24px;
+    background:#591827;padding:24px;
   }
   .login-shell{
     width:100%;max-width:380px;border-radius:28px;overflow:hidden;
-    box-shadow:0 20px 60px rgba(0,0,0,.45);background:#FFF9F0;
+    box-shadow:0 20px 60px rgba(60,45,20,.35);background:#FBF9F0;
   }
   .login-scene{position:relative;height:200px;}
   .login-scene svg{position:absolute;inset:0;width:100%;height:100%;display:block;}
@@ -986,39 +986,39 @@
   }
   .login-logo img{width:82%;height:82%;object-fit:contain;}
   .login-brand h1{
-    font-family:var(--font-serif);font-size:18px;font-weight:600;color:#FFF6E9;margin:0;
+    font-family:var(--font-serif);font-size:18px;font-weight:600;color:#FBF9F5;margin:0;
     text-shadow:0 2px 10px rgba(0,0,0,.4);
   }
-  .login-card{padding:28px 26px 26px;text-align:center;background:#FFF9F0;}
-  .login-sub{font-size:13.5px;color:#8A6F5C;margin:0 0 20px;}
+  .login-card{padding:28px 26px 26px;text-align:center;background:#FBF9F5;}
+  .login-sub{font-size:13.5px;color:#9C8F7C;margin:0 0 20px;}
   .login-field{text-align:left;margin-bottom:12px;}
   .login-input-wrap{position:relative;display:flex;align-items:center;}
-  .login-input-wrap .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#B98A6A;pointer-events:none;}
+  .login-input-wrap .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#B4863C;pointer-events:none;}
   .login-input-wrap input{
     width:100%;height:46px;border-radius:999px;border:1px solid transparent;
-    background:#F3E3D5;padding:0 16px 0 44px;font-size:14px;color:#4A2E22;
+    background:#F6EEE0;padding:0 16px 0 44px;font-size:14px;color:#221C17;
   }
-  .login-input-wrap input::placeholder{color:#B49580;}
-  .login-input-wrap input:focus{outline:none;border-color:var(--maroon);background:#fff;}
+  .login-input-wrap input::placeholder{color:#9C8F7C;}
+  .login-input-wrap input:focus{outline:none;border-color:#6E1F32;background:#fff;}
   .login-error{
-    background:#F7E0D6;color:#8A3B22;border-radius:9px;
+    background:#F5E9EB;color:#591827;border-radius:9px;
     padding:9px 12px;font-size:13px;margin-bottom:14px;text-align:left;
   }
-  .login-hint{font-size:12px;color:#8A6F5C;margin:16px 0 0;}
+  .login-hint{font-size:12px;color:#9C8F7C;margin:16px 0 0;}
   /* El botón de enviar usa el maroon fijo del tema claro, para que no cambie si el usuario
      dejó guardada la preferencia de modo oscuro (esta pantalla tiene su propia estética fija). */
   .login-card .btn{background:#6E1F32;border-color:#6E1F32;}
   .login-card .btn:hover{background:#591827;border-color:#591827;}
   .btn-google{
     width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
-    height:40px;border-radius:var(--radius-pill);border:1px solid #E6D3C2;
-    background:#fff;color:#5A4336;font-family:var(--font-display);font-weight:600;font-size:13px;
+    height:40px;border-radius:var(--radius-pill);border:1px solid #DBD0BF;
+    background:#fff;color:#56493C;font-family:var(--font-display);font-weight:600;font-size:13px;
     cursor:pointer;transition:border-color .15s ease, background .15s ease;
   }
-  .btn-google:hover{border-color:var(--maroon);background:#FBF3EC;}
+  .btn-google:hover{border-color:#6E1F32;background:#FBF9F5;}
   .btn-google:disabled{opacity:0.6;cursor:default;}
-  .login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:#B49580;font-size:12px;}
-  .login-divider::before, .login-divider::after{content:'';flex:1;height:1px;background:#EEDFD0;}
+  .login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:#9C8F7C;font-size:12px;}
+  .login-divider::before, .login-divider::after{content:'';flex:1;height:1px;background:#ECE4D6;}
 
   /* ---------- Carga inicial de sesión ---------- */
   .app-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
