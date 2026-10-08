@@ -59,13 +59,13 @@ export default function Login() {
               </radialGradient>
             </defs>
             <rect x="0" y="0" width="400" height="230" fill="url(#loginSky)" />
-            <circle cx="200" cy="72" r="56" fill={escena.glow} opacity={escena.glowOpacidad} />
-            <circle cx="200" cy="72" r="32" fill="url(#loginAstro)" />
+            <circle cx="300" cy="58" r="50" fill={escena.glow} opacity={escena.glowOpacidad} />
+            <circle cx="300" cy="58" r="28" fill="url(#loginAstro)" />
             {escena.astro === 'luna' && (
               <>
-                <circle cx="211" cy="62" r="5" fill={escena.astroBorde} opacity="0.5" />
-                <circle cx="190" cy="80" r="3.5" fill={escena.astroBorde} opacity="0.5" />
-                <circle cx="195" cy="60" r="2.5" fill={escena.astroBorde} opacity="0.4" />
+                <circle cx="311" cy="48" r="4.5" fill={escena.astroBorde} opacity="0.5" />
+                <circle cx="290" cy="66" r="3" fill={escena.astroBorde} opacity="0.5" />
+                <circle cx="295" cy="46" r="2" fill={escena.astroBorde} opacity="0.4" />
               </>
             )}
             {ESTRELLAS.slice(0, escena.estrellas).map(([cx, cy, r, o], i) => (
