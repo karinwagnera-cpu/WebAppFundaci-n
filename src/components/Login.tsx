@@ -76,7 +76,6 @@ export default function Login() {
           </svg>
           <div className="login-brand">
             <div className="login-logo"><img src={logo} alt="Fundación Huentala" /></div>
-            <h1>Fundación Huentala</h1>
           </div>
         </div>
 
