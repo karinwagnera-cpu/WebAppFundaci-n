@@ -40,11 +40,11 @@ export default function Sidebar({ vista, onVista, onClose }: Props) {
         ))}
         <button
           className={'nav-item nav-item-bottom' + (vista === 'configuracion' ? ' active' : '')}
-          title="Configuración"
+          title="Ajustes"
           onClick={() => onVista('configuracion')}
         >
           <Icon name="settings" />
-          <span className="nav-label">Configuración</span>
+          <span className="nav-label">Ajustes</span>
         </button>
       </nav>
     </aside>
