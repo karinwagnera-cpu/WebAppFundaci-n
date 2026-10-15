@@ -586,7 +586,7 @@
   .pagination button:hover:not(:disabled){border-color:var(--maroon);color:var(--maroon);}
   .pagination button.active{background:var(--maroon);border-color:var(--maroon);color:#fff;}
   .pagination button:disabled{opacity:.4;cursor:default;}
-  .pagination .pg-size{margin-left:8px;padding:8px 10px;border-radius:9px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-soft);font-size:12.5px;cursor:pointer;}
+  .pg-size{padding:8px 10px;border-radius:9px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-soft);font-size:12.5px;cursor:pointer;}
   .badge{
     display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;
     background:var(--taupe-tint);color:var(--ink-soft);white-space:nowrap;

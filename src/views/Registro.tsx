@@ -172,11 +172,7 @@ export default function RegistroView({
               Limpiar filtros de columna
             </button>
           )}
-          <span className="pg-info">
-            {filas.length <= porPagina
-              ? `${filas.length} registro${filas.length !== 1 ? "s" : ""}`
-              : `${(actual - 1) * porPagina + 1}–${Math.min(actual * porPagina, filas.length)} de ${filas.length}`}
-          </span>
+          {selectorTamano}
           {puedeEditar && (
             <button className="btn" onClick={onNuevo}>
               <Icon name="plus" /> Nuevo registro
@@ -295,9 +291,7 @@ export default function RegistroView({
       </div>
 
       <div className="pagination">
-        {filas.length <= porPagina ? (
-          selectorTamano
-        ) : (
+        {filas.length > porPagina && (
           <>
             <button onClick={() => setPagina(actual - 1)} disabled={actual === 1} aria-label="Anterior">‹</button>
             {numeros.map((n, i) =>
@@ -306,7 +300,6 @@ export default function RegistroView({
                 : <button key={n} className={n === actual ? 'active' : ''} onClick={() => setPagina(n)}>{n}</button>
             )}
             <button onClick={() => setPagina(actual + 1)} disabled={actual === totalPags} aria-label="Siguiente">›</button>
-            {selectorTamano}
           </>
         )}
       </div>
