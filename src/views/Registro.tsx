@@ -154,24 +154,46 @@ export default function RegistroView({
   return (
     <section className="view active">
       <div className="table-tools">
-        <div className="search-row">
-          <div className="searchbox">
-            <Icon name="search" />
-            <input
-              type="text"
-              value={busqueda}
-              onChange={(e) => { onBusqueda(e.target.value); setPagina(1); }}
-              placeholder="Buscar beneficiario, evento…"
-            />
-          </div>
-        </div>
         <div className="reg-actions">
+          <div className="search-row">
+            <div className="searchbox">
+              <Icon name="search" />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => { onBusqueda(e.target.value); setPagina(1); }}
+                placeholder="Buscar beneficiario, evento…"
+              />
+            </div>
+          </div>
           <FiltroBar filtro={filtro} anios={anios(registros)} onChange={(f) => { onFiltro(f); setPagina(1); }} />
           {colFiltrosActivos && (
             <button className="btn secondary small" onClick={() => setColFiltros({})}>
               Limpiar filtros de columna
             </button>
           )}
+          <div className="pagination">
+            {filas.length <= porPagina ? (
+              <>
+                <span className="pg-info">{filas.length} registro{filas.length !== 1 ? 's' : ''}</span>
+                {selectorTamano}
+              </>
+            ) : (
+              <>
+                <span className="pg-info">
+                  {(actual - 1) * porPagina + 1}–{Math.min(actual * porPagina, filas.length)} de {filas.length}
+                </span>
+                <button onClick={() => setPagina(actual - 1)} disabled={actual === 1} aria-label="Anterior">‹</button>
+                {numeros.map((n, i) =>
+                  n === '…'
+                    ? <span key={`e${i}`} className="pg-info" style={{ margin: '0 2px' }}>…</span>
+                    : <button key={n} className={n === actual ? 'active' : ''} onClick={() => setPagina(n)}>{n}</button>
+                )}
+                <button onClick={() => setPagina(actual + 1)} disabled={actual === totalPags} aria-label="Siguiente">›</button>
+                {selectorTamano}
+              </>
+            )}
+          </div>
           {puedeEditar && (
             <button className="btn" onClick={onNuevo}>
               <Icon name="plus" /> Nuevo registro
@@ -287,29 +309,6 @@ export default function RegistroView({
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="pagination">
-        {filas.length <= porPagina ? (
-          <>
-            <span className="pg-info">{filas.length} registro{filas.length !== 1 ? 's' : ''}</span>
-            {selectorTamano}
-          </>
-        ) : (
-          <>
-            <span className="pg-info">
-              {(actual - 1) * porPagina + 1}–{Math.min(actual * porPagina, filas.length)} de {filas.length}
-            </span>
-            <button onClick={() => setPagina(actual - 1)} disabled={actual === 1} aria-label="Anterior">‹</button>
-            {numeros.map((n, i) =>
-              n === '…'
-                ? <span key={`e${i}`} className="pg-info" style={{ margin: '0 2px' }}>…</span>
-                : <button key={n} className={n === actual ? 'active' : ''} onClick={() => setPagina(n)}>{n}</button>
-            )}
-            <button onClick={() => setPagina(actual + 1)} disabled={actual === totalPags} aria-label="Siguiente">›</button>
-            {selectorTamano}
-          </>
-        )}
       </div>
 
       {filas.length === 0 && (
