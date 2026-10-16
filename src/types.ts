@@ -37,6 +37,9 @@ export interface Filtro {
   y: string;
   m: string;
   e: string;
+  /** Rango personalizado (YYYY-MM-DD), opcional. */
+  desde: string;
+  hasta: string;
 }
 
 export interface Adjunto {

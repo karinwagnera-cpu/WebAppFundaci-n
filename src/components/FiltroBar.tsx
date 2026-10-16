@@ -15,7 +15,7 @@ interface Props {
 /** Botón único de filtros con panel desplegable (año / mes / eje). */
 export default function FiltroBar({ filtro, anios, onChange, children }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const activo = Boolean(filtro.y || filtro.m || filtro.e);
+  const activo = Boolean(filtro.y || filtro.m || filtro.e || filtro.desde || filtro.hasta);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -70,8 +70,21 @@ export default function FiltroBar({ filtro, anios, onChange, children }: Props) 
               {EJES.map((e) => <option key={e} value={e}>{tituloEje(e)}</option>)}
             </select>
           </div>
+          <div className="fp-row">
+            <label>Rango personalizado</label>
+            <div className="fp-range">
+              <label className="fp-date">
+                <span>Desde</span>
+                <input type="date" value={filtro.desde} max={filtro.hasta || undefined} onChange={(e) => onChange({ ...filtro, desde: e.target.value })} />
+              </label>
+              <label className="fp-date">
+                <span>Hasta</span>
+                <input type="date" value={filtro.hasta} min={filtro.desde || undefined} onChange={(e) => onChange({ ...filtro, hasta: e.target.value })} />
+              </label>
+            </div>
+          </div>
           <div className="fp-actions">
-            <button type="button" className="fp-clear" onClick={() => onChange({ y: '', m: '', e: '' })}>
+            <button type="button" className="fp-clear" onClick={() => onChange({ y: '', m: '', e: '', desde: '', hasta: '' })}>
               Limpiar filtros
             </button>
           </div>

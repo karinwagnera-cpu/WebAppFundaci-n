@@ -2,13 +2,20 @@ import type { CampoAgrupacion, Filtro, MetricaGrafico, Registro } from '../types
 import { EJES, UNIDADES, MESES } from './constants';
 import { fmtInt, fmtMoney, parseUnidades, tituloEje, tituloTexto } from './format';
 
+/** Un registro pasa el filtro si cumple año, mes, eje y el rango de fechas (si están definidos). */
+export function coincideFiltro(r: Registro, f: Filtro): boolean {
+  if (f.y && (!r.fecha || r.fecha.slice(0, 4) !== f.y)) return false;
+  if (f.m && (!r.fecha || r.fecha.slice(5, 7) !== f.m)) return false;
+  if (f.e && r.eje !== f.e && r.ejeSecundario !== f.e) return false;
+  if ((f.desde || f.hasta) && !r.fecha) return false;
+  const fecha = r.fecha as string;
+  if (f.desde && fecha < f.desde) return false;
+  if (f.hasta && fecha > f.hasta) return false;
+  return true;
+}
+
 export function filtrar(registros: Registro[], f: Filtro): Registro[] {
-  return registros.filter((r) => {
-    if (f.y && (!r.fecha || r.fecha.slice(0, 4) !== f.y)) return false;
-    if (f.m && (!r.fecha || r.fecha.slice(5, 7) !== f.m)) return false;
-    if (f.e && r.eje !== f.e && r.ejeSecundario !== f.e) return false;
-    return true;
-  });
+  return registros.filter((r) => coincideFiltro(r, f));
 }
 
 export interface Resumen {
@@ -141,6 +148,7 @@ export function construirInforme(registros: Registro[], f: Filtro): Informe {
   const partes = [f.y ? `Año ${f.y}` : 'Histórico completo'];
   if (f.m) partes.push(MESES[parseInt(f.m, 10) - 1]);
   if (f.e) partes.push(tituloEje(f.e));
+  if (f.desde || f.hasta) partes.push(`${f.desde ? 'desde ' + f.desde : ''}${f.desde && f.hasta ? ' ' : ''}${f.hasta ? 'hasta ' + f.hasta : ''}`);
 
   return {
     data,

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Filtro, Registro } from '../types';
-import { anios } from '../lib/agregados';
+import { anios, coincideFiltro } from '../lib/agregados';
 import { ESTADO_ACCION_LABEL } from '../lib/constants';
 import { fmtFecha, fmtMoney, tituloEje, tituloTexto } from '../lib/format';
 import FiltroBar from '../components/FiltroBar';
@@ -91,9 +91,7 @@ export default function RegistroView({
     const q = busqueda.toLowerCase().trim();
     return registros
       .filter((r) => {
-        if (filtro.y && (!r.fecha || r.fecha.slice(0, 4) !== filtro.y)) return false;
-        if (filtro.m && (!r.fecha || r.fecha.slice(5, 7) !== filtro.m)) return false;
-        if (filtro.e && r.eje !== filtro.e && r.ejeSecundario !== filtro.e) return false;
+        if (!coincideFiltro(r, filtro)) return false;
         if (q && ![r.beneficiario, r.aporte, r.contacto, r.motivo, r.eje, r.ejeSecundario, r.unidad, r.numeroCertificado, r.numeroFactura].join(' ').toLowerCase().includes(q)) return false;
         for (const [col, val] of Object.entries(colFiltros)) {
           if (!val || !val.trim()) continue;
@@ -310,7 +308,7 @@ export default function RegistroView({
           <div className="big">No hay registros que coincidan</div>
           <p>Probá con otra búsqueda, ajustá los filtros o cargá un nuevo registro para verlo acá.</p>
           <div className="empty-actions">
-            <button className="btn secondary small" onClick={() => { onFiltro({ y: '', m: '', e: '' }); onBusqueda(''); setColFiltros({}); }}>
+            <button className="btn secondary small" onClick={() => { onFiltro({ y: '', m: '', e: '', desde: '', hasta: '' }); onBusqueda(''); setColFiltros({}); }}>
               Limpiar filtros
             </button>
             {puedeEditar && <button className="btn small" onClick={onNuevo}>+ Nuevo registro</button>}
