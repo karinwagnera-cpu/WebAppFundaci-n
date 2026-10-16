@@ -34,8 +34,8 @@ export interface Registro {
 
 /** Filtro compartido por Dashboard, Registro e Informes. */
 export interface Filtro {
-  y: string;
-  m: string;
+  y: string[];
+  m: string[];
   e: string;
   /** Rango personalizado (YYYY-MM-DD), opcional. */
   desde: string;

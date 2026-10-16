@@ -12,10 +12,12 @@ interface Props {
   children?: ReactNode;
 }
 
+const alternar = (lista: string[], v: string) => (lista.includes(v) ? lista.filter((x) => x !== v) : [...lista, v]);
+
 /** Botón único de filtros con panel desplegable (año / mes / eje). */
 export default function FiltroBar({ filtro, anios, onChange, children }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const activo = Boolean(filtro.y || filtro.m || filtro.e || filtro.desde || filtro.hasta);
+  const activo = Boolean(filtro.y.length || filtro.m.length || filtro.e || filtro.desde || filtro.hasta);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -50,18 +52,20 @@ export default function FiltroBar({ filtro, anios, onChange, children }: Props) 
             <button type="button" className="fp-close" aria-label="Cerrar" onClick={() => setAbierto(false)}>✕</button>
           </div>
           <div className="fp-row">
-            <label>Año</label>
-            <select value={filtro.y} onChange={(e) => onChange({ ...filtro, y: e.target.value })}>
-              <option value="">Todos los años</option>
-              {anios.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <label>Año <em>(podés elegir varios)</em></label>
+            <div className="fp-chips">
+              {anios.map((y) => (
+                <button key={y} type="button" className={'fp-chip' + (filtro.y.includes(y) ? ' on' : '')} aria-pressed={filtro.y.includes(y)} onClick={() => onChange({ ...filtro, y: alternar(filtro.y, y) })}>{y}</button>
+              ))}
+            </div>
           </div>
           <div className="fp-row">
-            <label>Mes</label>
-            <select value={filtro.m} onChange={(e) => onChange({ ...filtro, m: e.target.value })}>
-              <option value="">Todos los meses</option>
-              {mesesOpciones().map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
+            <label>Mes <em>(podés elegir varios)</em></label>
+            <div className="fp-chips months">
+              {mesesOpciones().map((m) => (
+                <button key={m.value} type="button" className={'fp-chip' + (filtro.m.includes(m.value) ? ' on' : '')} aria-pressed={filtro.m.includes(m.value)} title={m.label} onClick={() => onChange({ ...filtro, m: alternar(filtro.m, m.value) })}>{m.label.slice(0, 3)}</button>
+              ))}
+            </div>
           </div>
           <div className="fp-row">
             <label>Eje estratégico</label>
@@ -84,7 +88,7 @@ export default function FiltroBar({ filtro, anios, onChange, children }: Props) 
             </div>
           </div>
           <div className="fp-actions">
-            <button type="button" className="fp-clear" onClick={() => onChange({ y: '', m: '', e: '', desde: '', hasta: '' })}>
+            <button type="button" className="fp-clear" onClick={() => onChange({ y: [], m: [], e: '', desde: '', hasta: '' })}>
               Limpiar filtros
             </button>
           </div>

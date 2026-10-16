@@ -2,10 +2,10 @@ import type { CampoAgrupacion, Filtro, MetricaGrafico, Registro } from '../types
 import { EJES, UNIDADES, MESES } from './constants';
 import { fmtInt, fmtMoney, parseUnidades, tituloEje, tituloTexto } from './format';
 
-/** Un registro pasa el filtro si cumple año, mes, eje y el rango de fechas (si están definidos). */
+/** Un registro pasa el filtro si cumple alguno de los años y meses elegidos, el eje y el rango de fechas (si están definidos). */
 export function coincideFiltro(r: Registro, f: Filtro): boolean {
-  if (f.y && (!r.fecha || r.fecha.slice(0, 4) !== f.y)) return false;
-  if (f.m && (!r.fecha || r.fecha.slice(5, 7) !== f.m)) return false;
+  if (f.y.length && (!r.fecha || !f.y.includes(r.fecha.slice(0, 4)))) return false;
+  if (f.m.length && (!r.fecha || !f.m.includes(r.fecha.slice(5, 7)))) return false;
   if (f.e && r.eje !== f.e && r.ejeSecundario !== f.e) return false;
   if ((f.desde || f.hasta) && !r.fecha) return false;
   const fecha = r.fecha as string;
@@ -145,8 +145,8 @@ export function construirInforme(registros: Registro[], f: Filtro): Informe {
     { acciones: 0, costo: 0, inversion: 0 }
   );
 
-  const partes = [f.y ? `Año ${f.y}` : 'Histórico completo'];
-  if (f.m) partes.push(MESES[parseInt(f.m, 10) - 1]);
+  const partes = [f.y.length ? `${f.y.length > 1 ? 'Años' : 'Año'} ${[...f.y].sort().join(', ')}` : 'Histórico completo'];
+  if (f.m.length) partes.push([...f.m].sort().map((m) => MESES[parseInt(m, 10) - 1]).join(', '));
   if (f.e) partes.push(tituloEje(f.e));
   if (f.desde || f.hasta) partes.push(`${f.desde ? 'desde ' + f.desde : ''}${f.desde && f.hasta ? ' ' : ''}${f.hasta ? 'hasta ' + f.hasta : ''}`);
 

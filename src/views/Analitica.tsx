@@ -93,7 +93,7 @@ export default function Analitica({ registros, campanas, filtro, onFiltro, tema 
 
   const exportarCsv = () => {
     const data = filtrar(registros, filtro);
-    const suf = [filtro.y, filtro.m].filter(Boolean).join('-');
+    const suf = [...filtro.y, ...filtro.m].join('-');
     exportarRegistrosCsv(data, `fundacion-huentala-informe${suf ? '-' + suf : ''}.csv`);
   };
 

@@ -308,7 +308,7 @@ export default function RegistroView({
           <div className="big">No hay registros que coincidan</div>
           <p>Probá con otra búsqueda, ajustá los filtros o cargá un nuevo registro para verlo acá.</p>
           <div className="empty-actions">
-            <button className="btn secondary small" onClick={() => { onFiltro({ y: '', m: '', e: '', desde: '', hasta: '' }); onBusqueda(''); setColFiltros({}); }}>
+            <button className="btn secondary small" onClick={() => { onFiltro({ y: [], m: [], e: '', desde: '', hasta: '' }); onBusqueda(''); setColFiltros({}); }}>
               Limpiar filtros
             </button>
             {puedeEditar && <button className="btn small" onClick={onNuevo}>+ Nuevo registro</button>}

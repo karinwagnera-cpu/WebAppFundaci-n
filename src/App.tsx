@@ -35,7 +35,7 @@ import CampaniaModal from './modals/CampaniaModal';
 import DocModal from './modals/DocModal';
 import PerfilUsuarioModal from './modals/PerfilUsuarioModal';
 
-const FILTRO_VACIO: Filtro = { y: '', m: '', e: '', desde: '', hasta: '' };
+const FILTRO_VACIO: Filtro = { y: [], m: [], e: '', desde: '', hasta: '' };
 
 const normalizar = (s: string | null | undefined): string =>
   (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
