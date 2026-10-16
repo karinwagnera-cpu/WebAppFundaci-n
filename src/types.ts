@@ -24,6 +24,13 @@ export interface Registro {
   numeroCertificado?: string | null;
   numeroFactura?: string | null;
   estado?: EstadoAccion | null;
+  /**
+   * Renglones de aporte de la acción (unidad, tipo, montos…). Vacío en los
+   * registros cargados antes de que existiera; en ese caso se arman a partir de
+   * los campos sueltos (unidad, costo, etc.), que además se siguen guardando con
+   * los totales para que versiones viejas de la app y los exportes sigan andando.
+   */
+  aportes?: Aporte[];
   fotos?: Adjunto[];
   consts?: Adjunto[];
   fotosCount?: number;
@@ -62,23 +69,42 @@ export interface DocMeta {
   path: string;
 }
 
-export interface RegistroForm {
-  editingId: number | null;
-  fecha: string;
-  tipo: string;
-  eje: string;
-  ejeSecundario: string;
+/** Un renglón de aporte dentro de una acción (por ejemplo, los desayunos de una unidad de negocio). */
+export interface Aporte {
   unidad: string;
-  beneficiario: string;
-  aporte: string;
-  motivo: string;
+  tipo: string;
+  descripcion: string;
+  costo: number | null;
+  inversion: number | null;
+  horas: number | null;
+  numeroCertificado: string | null;
+  numeroFactura: string | null;
+}
+
+/** Aporte tal como se edita en el formulario (los números como texto). */
+export interface AporteForm {
+  unidad: string;
+  tipo: string;
+  descripcion: string;
   costo: string;
   inversion: string;
   horas: string;
-  contacto: string;
-  observaciones: string;
   numeroCertificado: string;
   numeroFactura: string;
+}
+
+export interface RegistroForm {
+  editingId: number | null;
+  fecha: string;
+  eje: string;
+  ejeSecundario: string;
+  beneficiario: string;
+  motivo: string;
+  contacto: string;
+  observaciones: string;
+  aportes: AporteForm[];
+  /** El registro viejo nombraba varias unidades y se repartieron los montos en partes iguales. */
+  aportesRepartidos: boolean;
   estado: EstadoAccion;
   fotos: Adjunto[];
   consts: Adjunto[];

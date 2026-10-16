@@ -1,4 +1,4 @@
-import type { Adjunto, Campania, DocMeta, Prefs, Registro } from '../types';
+import type { Adjunto, Aporte, Campania, DocMeta, Prefs, Registro } from '../types';
 import { normalizarEstadoAccion } from './constants';
 import { supabase } from './supabaseClient';
 
@@ -88,6 +88,7 @@ interface RegistroRow {
   numero_certificado: string | null;
   numero_factura: string | null;
   estado: string | null;
+  aportes: Aporte[] | null;
   fotos: Adjunto[] | null;
   consts: Adjunto[] | null;
   fotos_count: number;
@@ -116,6 +117,7 @@ const registroDesdeFila = (row: RegistroRow): Registro => ({
   numeroCertificado: row.numero_certificado,
   numeroFactura: row.numero_factura,
   estado: normalizarEstadoAccion(row.estado),
+  aportes: row.aportes ?? [],
   fotos: row.fotos ?? [],
   consts: row.consts ?? [],
   fotosCount: row.fotos_count,
@@ -144,6 +146,7 @@ const filaDesdeRegistro = (r: Registro): RegistroRow => ({
   numero_certificado: r.numeroCertificado ?? null,
   numero_factura: r.numeroFactura ?? null,
   estado: normalizarEstadoAccion(r.estado),
+  aportes: r.aportes ?? [],
   fotos: r.fotos ?? [],
   consts: r.consts ?? [],
   fotos_count: r.fotosCount ?? 0,

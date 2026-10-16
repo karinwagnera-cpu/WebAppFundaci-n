@@ -13,7 +13,16 @@ export const EJES = [
   'EMPLEABILIDAD Y DESARROLLO ECONÓMICO',
 ] as const;
 
-export const UNIDADES = ['Fundación', 'Sheraton Mendoza', 'Huentala Hotel', 'Huentala Wines', 'Otro'] as const;
+export const UNIDADES = [
+  'Fundación Huentala',
+  'Sheraton Mendoza Hotel',
+  'Hualta Winery Hotel',
+  'Huentala Hotel',
+  'Huentala Wines',
+  'Ohana',
+  'Chimpay Inversiones',
+  'Otro',
+] as const;
 
 export const DOC_CATEGORIAS = ['Legal', 'Gobernanza', 'Comprobantes', 'Institucional', 'Otro'] as const;
 

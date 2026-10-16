@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type { Registro, RegistroForm } from '../types';
+import type { Aporte, AporteForm, Registro, RegistroForm } from '../types';
 import { EJES, ESTADOS_ACCION, ESTADO_ACCION_LABEL, TIPOS, UNIDADES, normalizarEstadoAccion } from '../lib/constants';
-import { humanSize, parseUnidades, tituloEje } from '../lib/format';
+import { fmtMoney, humanSize, tituloEje } from '../lib/format';
+import { aportesDe } from '../lib/aportes';
 import { subirAdjunto } from '../lib/storage';
 import { notificar } from '../lib/notificaciones';
 import Icon from '../components/Icon';
@@ -14,26 +15,38 @@ interface Props {
   onCerrar: () => void;
 }
 
+const txt = (n: number | null | undefined) => (n !== null && n !== undefined ? String(n) : '');
+
+const aporteVacio = (): AporteForm => ({
+  unidad: UNIDADES[0], tipo: TIPOS[0], descripcion: '', costo: '', inversion: '', horas: '', numeroCertificado: '', numeroFactura: '',
+});
+
+const aporteAForm = (a: Aporte): AporteForm => ({
+  unidad: a.unidad || UNIDADES[0],
+  tipo: a.tipo || TIPOS[0],
+  descripcion: a.descripcion ?? '',
+  costo: txt(a.costo),
+  inversion: txt(a.inversion),
+  horas: txt(a.horas),
+  numeroCertificado: a.numeroCertificado ?? '',
+  numeroFactura: a.numeroFactura ?? '',
+});
+
 const vacio = (r: Registro | null, fechaInicial?: string): RegistroForm => {
   const fecha = r?.fecha ?? fechaInicial ?? '';
   const hoyISO = new Date().toISOString().slice(0, 10);
+  const { aportes, repartidos } = r ? aportesDe(r) : { aportes: [], repartidos: false };
   return {
     editingId: r ? r.id : null,
     fecha,
-    tipo: r?.tipo ?? TIPOS[0],
     eje: r?.eje ?? EJES[0],
     ejeSecundario: r?.ejeSecundario ?? '',
-    unidad: r ? (UNIDADES.includes(r.unidad as typeof UNIDADES[number]) ? r.unidad! : parseUnidades(r.unidad)[0]) : UNIDADES[0],
     beneficiario: r?.beneficiario ?? '',
-    aporte: r?.aporte ?? '',
     motivo: r?.motivo ?? '',
-    costo: r?.costo !== null && r?.costo !== undefined ? String(r.costo) : '',
-    inversion: r?.inversion !== null && r?.inversion !== undefined ? String(r.inversion) : '',
-    horas: r?.horas !== null && r?.horas !== undefined ? String(r.horas) : '',
     contacto: r?.contacto ?? '',
     observaciones: r?.observaciones ?? '',
-    numeroCertificado: r?.numeroCertificado ?? '',
-    numeroFactura: r?.numeroFactura ?? '',
+    aportes: aportes.length ? aportes.map(aporteAForm) : [aporteVacio()],
+    aportesRepartidos: repartidos,
     estado: r ? normalizarEstadoAccion(r.estado) : (fecha > hoyISO ? 'planificada' : 'realizada'),
     fotos: r?.fotos ?? [],
     consts: r?.consts ?? [],
@@ -71,10 +84,27 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
   const quitar = (key: 'fotos' | 'consts', idx: number) =>
     setForm((f) => ({ ...f, [key]: f[key].filter((_, i) => i !== idx) }));
 
+  const setAporte = <K extends keyof AporteForm>(idx: number, key: K, value: AporteForm[K]) =>
+    setForm((f) => ({ ...f, aportes: f.aportes.map((a, i) => (i === idx ? { ...a, [key]: value } : a)) }));
+  const agregarAporte = () =>
+    setForm((f) => {
+      // El nuevo renglón arranca con el mismo tipo que el anterior: suele repetirse.
+      const previo = f.aportes[f.aportes.length - 1];
+      return { ...f, aportes: [...f.aportes, { ...aporteVacio(), tipo: previo?.tipo || TIPOS[0] }] };
+    });
+  const quitarAporte = (idx: number) =>
+    setForm((f) => ({ ...f, aportes: f.aportes.filter((_, i) => i !== idx) }));
+
   /** Las visitas / site suelen implicar 2 hs; nunca pisa un valor cargado. */
-  const sugerirHoras = () => {
-    if (/visita|site/i.test(form.aporte) && form.horas === '') set('horas', '2');
+  const sugerirHoras = (idx: number) => {
+    const a = form.aportes[idx];
+    if (a && /visita|site/i.test(a.descripcion) && a.horas === '') setAporte(idx, 'horas', '2');
   };
+
+  const suma = (key: 'costo' | 'inversion' | 'horas') =>
+    form.aportes.reduce((s, a) => s + (Number(a[key]) || 0), 0);
+  const opciones = (lista: readonly string[], actual: string) =>
+    (lista.includes(actual) || !actual ? lista : [actual, ...lista]).map((v) => <option key={v} value={v}>{v}</option>);
 
   const chips = (key: 'fotos' | 'consts') => (
     <div className="attach-list">
@@ -112,12 +142,6 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
               </select>
               <div className="hint">Planificada: todavía no sucedió.</div>
             </div>
-            <div className="field c3">
-              <label htmlFor="fdTipo">Tipo de movimiento *</label>
-              <select id="fdTipo" value={form.tipo} onChange={(e) => set('tipo', e.target.value)}>
-                {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
             <div className="field c6">
               <label htmlFor="fdBeneficiario">Beneficiario / Institución *</label>
               <input
@@ -146,42 +170,82 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
               </select>
               <div className="hint">Opcional, para acciones que cruzan más de un eje.</div>
             </div>
-            <div className="field c6">
-              <label htmlFor="fdUnidad">Unidad de negocio *</label>
-              <select id="fdUnidad" value={form.unidad} onChange={(e) => set('unidad', e.target.value)}>
-                {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-            <div className="field c6">
-              <label htmlFor="fdAporte">Donación o aporte</label>
-              <input
-                id="fdAporte" type="text" value={form.aporte}
-                onChange={(e) => set('aporte', e.target.value)} onBlur={sugerirHoras}
-              />
-            </div>
             <div className="field c12">
               <label htmlFor="fdMotivo">Descripción</label>
               <textarea id="fdMotivo" rows={2} value={form.motivo} onChange={(e) => set('motivo', e.target.value)} />
             </div>
           </div>
 
-          <div className="form-section-title">Valorización y voluntariado</div>
-          <div className="ux-grid">
-            <div className="field c4">
-              <label htmlFor="fdCosto">Costo interno (ARS)</label>
-              <input id="fdCosto" type="number" min={0} step={0.01} value={form.costo} onChange={(e) => set('costo', e.target.value)} />
-              <div className="hint">Lo que le cuesta a la Fundación producir/aportar lo donado.</div>
+          <div className="form-section-title">Aportes</div>
+          <div className="hint" style={{ marginBottom: 10 }}>
+            Cargá un renglón por cada donación o unidad de negocio que participó en la acción.
+          </div>
+          {form.aportesRepartidos && (
+            <div className="aporte-aviso">
+              Este registro nombraba varias unidades con un solo monto: se repartió en partes iguales. Ajustá los montos si no fue así.
             </div>
-            <div className="field c4">
-              <label htmlFor="fdInversion">Inversión (ARS)</label>
-              <input id="fdInversion" type="number" min={0} step={0.01} value={form.inversion} onChange={(e) => set('inversion', e.target.value)} />
-              <div className="hint">Valor de mercado de lo donado.</div>
+          )}
+          {form.aportes.map((a, i) => (
+            <div key={i} className="aporte-card">
+              <div className="aporte-head">
+                <span>Aporte {i + 1}</span>
+                {form.aportes.length > 1 && (
+                  <button type="button" className="aporte-quitar" onClick={() => quitarAporte(i)}>Quitar</button>
+                )}
+              </div>
+              <div className="ux-grid">
+                <div className="field c4">
+                  <label htmlFor={`apUnidad${i}`}>Unidad de negocio *</label>
+                  <select id={`apUnidad${i}`} value={a.unidad} onChange={(e) => setAporte(i, 'unidad', e.target.value)}>
+                    {opciones(UNIDADES, a.unidad)}
+                  </select>
+                </div>
+                <div className="field c4">
+                  <label htmlFor={`apTipo${i}`}>Tipo de movimiento *</label>
+                  <select id={`apTipo${i}`} value={a.tipo} onChange={(e) => setAporte(i, 'tipo', e.target.value)}>
+                    {opciones(TIPOS, a.tipo)}
+                  </select>
+                </div>
+                <div className="field c4">
+                  <label htmlFor={`apDesc${i}`}>Donación o aporte</label>
+                  <input
+                    id={`apDesc${i}`} type="text" value={a.descripcion} placeholder="Ej.: 40 desayunos"
+                    onChange={(e) => setAporte(i, 'descripcion', e.target.value)} onBlur={() => sugerirHoras(i)}
+                  />
+                </div>
+                <div className="field c3">
+                  <label htmlFor={`apCosto${i}`}>Costo interno (ARS)</label>
+                  <input id={`apCosto${i}`} type="number" min={0} step={0.01} value={a.costo} onChange={(e) => setAporte(i, 'costo', e.target.value)} />
+                </div>
+                <div className="field c3">
+                  <label htmlFor={`apInv${i}`}>Inversión (ARS)</label>
+                  <input id={`apInv${i}`} type="number" min={0} step={0.01} value={a.inversion} onChange={(e) => setAporte(i, 'inversion', e.target.value)} />
+                </div>
+                <div className="field c2">
+                  <label htmlFor={`apHoras${i}`}>Horas</label>
+                  <input id={`apHoras${i}`} type="number" min={0} step={0.5} value={a.horas} onChange={(e) => setAporte(i, 'horas', e.target.value)} />
+                </div>
+                <div className="field c2">
+                  <label htmlFor={`apCert${i}`}>N° certificado</label>
+                  <input id={`apCert${i}`} type="text" value={a.numeroCertificado} onChange={(e) => setAporte(i, 'numeroCertificado', e.target.value)} />
+                </div>
+                <div className="field c2">
+                  <label htmlFor={`apFact${i}`}>N° factura</label>
+                  <input id={`apFact${i}`} type="text" value={a.numeroFactura} onChange={(e) => setAporte(i, 'numeroFactura', e.target.value)} />
+                </div>
+              </div>
             </div>
-            <div className="field c4">
-              <label htmlFor="fdHoras">Horas de voluntariado</label>
-              <input id="fdHoras" type="number" min={0} step={0.5} value={form.horas} onChange={(e) => set('horas', e.target.value)} />
-              <div className="hint">Las visitas / site suelen ser 2 hs.</div>
+          ))}
+          <div className="aporte-pie">
+            <button type="button" className="btn secondary small" onClick={agregarAporte}>
+              <Icon name="plus" /> Agregar aporte
+            </button>
+            <div className="aporte-total">
+              Total: <strong>{fmtMoney(suma('costo'))}</strong> costo · <strong>{fmtMoney(suma('inversion'))}</strong> inversión · <strong>{suma('horas')}</strong> hs
             </div>
+          </div>
+          <div className="hint" style={{ marginTop: 6 }}>
+            Costo interno: lo que le cuesta a la Fundación producir/aportar lo donado. Inversión: valor de mercado. Las visitas / site suelen ser 2 hs.
           </div>
 
           <div className="form-section-title">Seguimiento</div>
@@ -190,15 +254,7 @@ export default function RegistroModal({ registro, fechaInicial, onGuardar, onEli
               <label htmlFor="fdContacto">Contacto</label>
               <input id="fdContacto" type="text" value={form.contacto} onChange={(e) => set('contacto', e.target.value)} />
             </div>
-            <div className="field c4">
-              <label htmlFor="fdNumCert">N° de certificado</label>
-              <input id="fdNumCert" type="text" value={form.numeroCertificado} onChange={(e) => set('numeroCertificado', e.target.value)} />
-            </div>
-            <div className="field c4">
-              <label htmlFor="fdNumFact">N° de factura</label>
-              <input id="fdNumFact" type="text" value={form.numeroFactura} onChange={(e) => set('numeroFactura', e.target.value)} />
-            </div>
-            <div className="field c12">
+            <div className="field c8">
               <label htmlFor="fdObs">Observaciones</label>
               <input id="fdObs" type="text" value={form.observaciones} onChange={(e) => set('observaciones', e.target.value)} />
             </div>

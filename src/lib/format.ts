@@ -45,10 +45,14 @@ export function parseUnidades(raw: string | null | undefined): string[] {
   if (!raw) return ['Otro'];
   const s = String(raw).toUpperCase();
   const out: string[] = [];
-  if (s.includes('WINE')) out.push('Huentala Wines');
-  if (s.includes('SHERATON')) out.push('Sheraton Mendoza');
+  // "Hualta Winery Hotel" y "Huentala Wines" son unidades distintas: se mira "WINERY" antes que "WINE".
+  if (s.includes('WINERY')) out.push('Hualta Winery Hotel');
+  else if (s.includes('WINE')) out.push('Huentala Wines');
+  if (s.includes('SHERATON')) out.push('Sheraton Mendoza Hotel');
   if ((s.includes('HUALTA') || s.includes('HUENTALA')) && !s.includes('WINE')) out.push('Huentala Hotel');
-  if (s.includes('FUNDACIÓN') || s.includes('FUNDACION')) out.push('Fundación');
+  if (s.includes('FUNDACIÓN') || s.includes('FUNDACION')) out.push('Fundación Huentala');
+  if (s.includes('OHANA')) out.push('Ohana');
+  if (s.includes('CHIMPAY')) out.push('Chimpay Inversiones');
   if (!out.length) out.push('Otro');
   return out;
 }

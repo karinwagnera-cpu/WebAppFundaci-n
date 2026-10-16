@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Rol } from '../types';
 
 interface Props {
@@ -11,11 +12,32 @@ interface Props {
   onBackup: () => void;
   onImportar: (file: File) => void;
   onReset: () => void;
+  onCerrar: () => void;
 }
 
-export default function PerfilMenu({ rol, email, avatarUrl, puedeEditar, mostrarSesion, onAbrirPerfil, onCerrarSesion, onBackup, onImportar, onReset }: Props) {
+export default function PerfilMenu({ rol, email, avatarUrl, puedeEditar, mostrarSesion, onAbrirPerfil, onCerrarSesion, onBackup, onImportar, onReset, onCerrar }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fuera = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Element | null;
+      // El botón de perfil hace su propio toggle; no cerramos acá para evitar que reabra.
+      if (!t || ref.current?.contains(t) || t.closest('.profile-btn')) return;
+      onCerrar();
+    };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onCerrar(); };
+    document.addEventListener('mousedown', fuera);
+    document.addEventListener('touchstart', fuera);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', fuera);
+      document.removeEventListener('touchstart', fuera);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [onCerrar]);
+
   return (
-    <div className="profile-menu show">
+    <div className="profile-menu show" ref={ref}>
       <div className="profile-menu-head">
         <span className="avatar big" style={{ overflow: 'hidden' }}>
           {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'FH'}

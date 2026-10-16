@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Registro } from '../types';
 import { ESTADO_ACCION_LABEL } from '../lib/constants';
+import { aportesDe } from '../lib/aportes';
 import { fmtFecha, fmtMoney, tituloEje, tituloTexto } from '../lib/format';
 import Icon from '../components/Icon';
 
@@ -36,6 +37,8 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
   push('N° de factura', r.numeroFactura || '');
 
   const hayDesc = cargado(r.motivo) || cargado(r.observaciones);
+  const { aportes } = aportesDe(r);
+  const sinMonto = (v: number | null) => (v === null ? '—' : fmtMoney(v));
 
   return (
     <div className="modal-backdrop show" onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}>
@@ -57,6 +60,22 @@ export default function DetalleModal({ registro: r, puedeEditar, onCerrar, onEdi
           <button className="modal-close" onClick={onCerrar} aria-label="Cerrar">✕</button>
         </div>
         <div className="detail-body">
+          <div className="detail-media-title" style={{ marginBottom: 8 }}>Aportes ({aportes.length})</div>
+          <div className="aportes-tabla">
+            <div className="aportes-row aportes-head">
+              <span>Unidad</span><span>Tipo</span><span>Donación o aporte</span><span className="num">Costo</span><span className="num">Inversión</span><span className="num">Horas</span>
+            </div>
+            {aportes.map((a, i) => (
+              <div key={i} className="aportes-row">
+                <span>{a.unidad}</span>
+                <span>{a.tipo || '—'}</span>
+                <span>{a.descripcion || '—'}</span>
+                <span className="num">{sinMonto(a.costo)}</span>
+                <span className="num">{sinMonto(a.inversion)}</span>
+                <span className="num">{a.horas ?? '—'}</span>
+              </div>
+            ))}
+          </div>
           <div className="detail-grid">
             {campos.map((c) => (
               <div key={c.label} className="df">

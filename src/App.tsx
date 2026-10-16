@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Campania, CampaniaForm, DocForm, DocMeta, Filtro, Registro, RegistroForm, Rol, Tema, Vista } from './types';
+import type { Aporte, Campania, CampaniaForm, DocForm, DocMeta, Filtro, Registro, RegistroForm, Rol, Tema, Vista } from './types';
 import { SEED_REGISTROS } from './data/registros';
 import { SEED_CAMPANAS } from './data/campanas';
 import type { Session } from '@supabase/supabase-js';
@@ -14,6 +14,7 @@ import { supabase } from './lib/supabaseClient';
 import { cerrarSesion, obtenerPerfil } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
+import { totalesDe } from './lib/aportes';
 import { mensajeError } from './lib/format';
 import { confirmar, notificar } from './lib/notificaciones';
 import Login from './components/Login';
@@ -233,9 +234,12 @@ export default function App() {
   const guardarRegistro = async (form: RegistroForm) => {
     const faltan: string[] = [];
     if (!form.beneficiario.trim()) faltan.push('Beneficiario / Institución');
-    if (!form.tipo) faltan.push('Tipo de movimiento');
     if (!form.eje) faltan.push('Eje estratégico');
-    if (!form.unidad) faltan.push('Unidad de negocio');
+    if (!form.aportes.length) faltan.push('Al menos un aporte');
+    form.aportes.forEach((a, i) => {
+      if (!a.unidad) faltan.push(`Aporte ${i + 1}: unidad de negocio`);
+      if (!a.tipo) faltan.push(`Aporte ${i + 1}: tipo de movimiento`);
+    });
     if (faltan.length) {
       notificar('Faltan completar campos obligatorios:\n- ' + faltan.join('\n- '));
       return;
@@ -247,16 +251,31 @@ export default function App() {
       if (Number.isNaN(d.getTime())) errores.push('La fecha no es válida.');
       else if (d.getFullYear() < 2014) errores.push('La fecha no puede ser anterior a 2014 (año de inicio de la Fundación).');
     }
-    if (form.costo !== '' && Number(form.costo) < 0) errores.push('El costo interno no puede ser negativo.');
-    if (form.inversion !== '' && Number(form.inversion) < 0) errores.push('La inversión no puede ser negativa.');
-    if (form.horas !== '' && Number(form.horas) < 0) errores.push('Las horas no pueden ser negativas.');
+    form.aportes.forEach((a, i) => {
+      const n = form.aportes.length > 1 ? `Aporte ${i + 1}: ` : '';
+      if (a.costo !== '' && Number(a.costo) < 0) errores.push(n + 'El costo interno no puede ser negativo.');
+      if (a.inversion !== '' && Number(a.inversion) < 0) errores.push(n + 'La inversión no puede ser negativa.');
+      if (a.horas !== '' && Number(a.horas) < 0) errores.push(n + 'Las horas no pueden ser negativas.');
+    });
     if (form.ejeSecundario && form.ejeSecundario === form.eje) errores.push('El eje secundario no puede ser igual al principal.');
     if (errores.length) {
       notificar('Revisá estos datos antes de guardar:\n- ' + errores.join('\n- '));
       return;
     }
-    if (form.horas !== '' && Number(form.horas) > 1000 &&
-        !await confirmar({ mensaje: `Cargaste ${form.horas} horas de voluntariado, ¿es correcto?` })) return;
+    const numero = (v: string) => (v !== '' ? Number(v) : null);
+    const aportes: Aporte[] = form.aportes.map((a) => ({
+      unidad: a.unidad,
+      tipo: a.tipo,
+      descripcion: a.descripcion.trim(),
+      costo: numero(a.costo),
+      inversion: numero(a.inversion),
+      horas: numero(a.horas),
+      numeroCertificado: a.numeroCertificado.trim() || null,
+      numeroFactura: a.numeroFactura.trim() || null,
+    }));
+    const totales = totalesDe(aportes);
+    if (totales.horas !== null && totales.horas > 1000 &&
+        !await confirmar({ mensaje: `Cargaste ${totales.horas} horas de voluntariado, ¿es correcto?` })) return;
 
     if (!form.editingId) {
       const objetivo = normalizar(form.beneficiario);
@@ -271,21 +290,17 @@ export default function App() {
     const rec: Registro = {
       id,
       fecha: form.fecha || null,
-      tipo: form.tipo,
       eje: form.eje,
       ejeSecundario: form.ejeSecundario || null,
-      unidad: form.unidad,
       beneficiario: form.beneficiario.trim(),
-      aporte: form.aporte.trim(),
       motivo: form.motivo.trim(),
-      costo: form.costo !== '' ? Number(form.costo) : null,
-      inversion: form.inversion !== '' ? Number(form.inversion) : null,
-      horas: form.horas !== '' ? Number(form.horas) : null,
       contacto: form.contacto.trim(),
       observaciones: form.observaciones.trim(),
-      numeroCertificado: form.numeroCertificado.trim() || null,
-      numeroFactura: form.numeroFactura.trim() || null,
       estado: form.estado,
+      // Campos sueltos de siempre con los totales de los aportes, para que la
+      // tabla, los exportes y versiones viejas de la app sigan funcionando.
+      ...totales,
+      aportes,
       fotos: form.fotos,
       consts: form.consts,
       fotosCount: form.fotos.length,
@@ -492,6 +507,7 @@ export default function App() {
             onBackup={backup}
             onImportar={importar}
             onReset={reiniciar}
+            onCerrar={() => setPerfilAbierto(false)}
           />
         )}
 
