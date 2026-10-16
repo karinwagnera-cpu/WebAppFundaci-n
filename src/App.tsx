@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Aporte, Campania, CampaniaForm, DocForm, DocMeta, Filtro, Registro, RegistroForm, Rol, Tema, Vista } from './types';
+import type {
+  Aporte, Campania, CampaniaForm, DocForm, DocMeta, Evento, EventoForm, Filtro, MiembroDirectorio, Registro,
+  RegistroForm, Rol, Tema, UsuarioPlataforma, Vista,
+} from './types';
 import { SEED_REGISTROS } from './data/registros';
 import { SEED_CAMPANAS } from './data/campanas';
 import type { Session } from '@supabase/supabase-js';
@@ -15,6 +18,10 @@ import { cerrarSesion, obtenerPerfil } from './lib/auth';
 import { exportarRegistrosCsv } from './lib/csv';
 import { parseExcelRegistros } from './lib/excelImport';
 import { totalesDe } from './lib/aportes';
+import {
+  agregarMiembroRemoto, borrarMiembroRemoto, deleteEventoRemoto, erroresForm, eventoDesdeForm, faltaMigracion,
+  fetchDirectorioRemoto, fetchEventosRemoto, fetchUsuariosPlataforma, guardarEventoRemoto, loadEventos, saveEventos,
+} from './lib/eventos';
 import { mensajeError } from './lib/format';
 import { confirmar, notificar } from './lib/notificaciones';
 import Login from './components/Login';
@@ -35,6 +42,7 @@ import RegistroModal from './modals/RegistroModal';
 import CampaniaModal from './modals/CampaniaModal';
 import DocModal from './modals/DocModal';
 import PerfilUsuarioModal from './modals/PerfilUsuarioModal';
+import EventoModal from './modals/EventoModal';
 
 const FILTRO_VACIO: Filtro = { y: [], m: [], e: '', desde: '', hasta: '' };
 
@@ -68,6 +76,12 @@ export default function App() {
   const [editando, setEditando] = useState<{ registro: Registro | null; fechaInicial?: string } | null>(null);
   const [editandoCampania, setEditandoCampania] = useState<{ campania: Campania | null } | null>(null);
   const [docModal, setDocModal] = useState(false);
+
+  const [eventos, setEventos] = useState<Evento[]>(() => loadEventos());
+  const [directorio, setDirectorio] = useState<MiembroDirectorio[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioPlataforma[]>([]);
+  const [avisoAgenda, setAvisoAgenda] = useState<string | null>(null);
+  const [editandoEvento, setEditandoEvento] = useState<{ evento: Evento | null; fecha?: string; hora?: string } | null>(null);
 
   const puedeEditar = rol === 'admin';
 
@@ -143,11 +157,37 @@ export default function App() {
     return () => { cancelado = true; };
   }, [userId]);
 
+  // La agenda se carga aparte: si sus tablas todavía no existen en Supabase,
+  // el resto del panel sigue funcionando normalmente.
+  useEffect(() => {
+    if (!supabaseDisponible || !userId) return;
+    let cancelado = false;
+    (async () => {
+      try {
+        const [evs, dir, usrs] = await Promise.all([fetchEventosRemoto(), fetchDirectorioRemoto(), fetchUsuariosPlataforma()]);
+        if (cancelado) return;
+        setEventos(evs);
+        saveEventos(evs);
+        setDirectorio(dir);
+        setUsuarios(usrs);
+        setAvisoAgenda(null);
+      } catch (err) {
+        console.error('No se pudo cargar la agenda', err);
+        if (cancelado) return;
+        setAvisoAgenda(faltaMigracion(err)
+          ? 'La agenda todavía no está activada en la base de datos (falta correr supabase/migrations/20261016_agenda.sql). Mientras tanto se ven solo los registros.'
+          : 'No se pudo cargar la agenda compartida; se muestra la última copia guardada en este navegador.');
+      }
+    })();
+    return () => { cancelado = true; };
+  }, [userId]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       setDetalleId(null);
       setEditando(null);
+      setEditandoEvento(null);
       setEditandoCampania(null);
       setDocModal(false);
       setPerfilAbierto(false);
@@ -331,6 +371,76 @@ export default function App() {
     if (registro) await eliminarAdjuntosStorage([...(registro.fotos ?? []), ...(registro.consts ?? [])]);
     persistirRegistros(registros.filter((r) => r.id !== id));
     setEditando(null);
+  };
+
+  const persistirEventos = (next: Evento[]) => {
+    setEventos(next);
+    saveEventos(next);
+    avisarGuardado();
+  };
+
+  const guardarEvento = async (form: EventoForm) => {
+    const errores = erroresForm(form);
+    if (errores.length) { notificar(errores.join('\n')); return; }
+    const local = eventoDesdeForm(form, form.editingId ?? 0);
+    let guardado: Evento;
+    if (supabaseDisponible) {
+      try {
+        guardado = await guardarEventoRemoto(local);
+      } catch (err) {
+        notificar(faltaMigracion(err)
+          ? 'La agenda todavía no está activada en la base de datos. Hay que correr la migración de Supabase.'
+          : 'No se pudo guardar el evento: ' + mensajeError(err));
+        return;
+      }
+    } else {
+      guardado = { ...local, id: form.editingId ?? eventos.reduce((m, e) => Math.max(m, e.id), 0) + 1 };
+    }
+    persistirEventos(form.editingId ? eventos.map((e) => (e.id === guardado.id ? guardado : e)) : [...eventos, guardado]);
+    setEditandoEvento(null);
+    notificar('Evento guardado.', 'ok');
+  };
+
+  const eliminarEvento = async (id: number) => {
+    if (!await confirmar({ mensaje: 'Se eliminará este evento de la agenda.', peligroso: true, textoConfirmar: 'Eliminar' })) return;
+    if (supabaseDisponible) {
+      try {
+        await deleteEventoRemoto(id);
+      } catch (err) {
+        notificar('No se pudo eliminar el evento: ' + mensajeError(err));
+        return;
+      }
+    }
+    persistirEventos(eventos.filter((e) => e.id !== id));
+    setEditandoEvento(null);
+  };
+
+  const agregarMiembro = async (m: Omit<MiembroDirectorio, 'id'>): Promise<boolean> => {
+    if (!m.nombre || !m.email) { notificar('Completá el nombre y el mail.'); return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.email)) { notificar('El mail no parece válido.'); return false; }
+    if (directorio.some((d) => d.email === m.email)) { notificar('Ese mail ya está en el directorio.'); return false; }
+    try {
+      const nuevo = await agregarMiembroRemoto(m);
+      setDirectorio((d) => [...d, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      avisarGuardado();
+      return true;
+    } catch (err) {
+      notificar('No se pudo agregar al directorio: ' + mensajeError(err));
+      return false;
+    }
+  };
+
+  const borrarMiembro = async (id: number) => {
+    const m = directorio.find((d) => d.id === id);
+    if (!m || !await confirmar({ mensaje: `Se quitará a ${m.nombre} del directorio. No se lo quita de los eventos a los que ya está invitado.`, textoConfirmar: 'Quitar' })) return;
+    try {
+      await borrarMiembroRemoto(id);
+    } catch (err) {
+      notificar('No se pudo quitar del directorio: ' + mensajeError(err));
+      return;
+    }
+    setDirectorio((d) => d.filter((x) => x.id !== id));
+    avisarGuardado();
   };
 
   const guardarDoc = async (form: DocForm) => {
@@ -540,9 +650,14 @@ export default function App() {
           {vista === 'calendario' && (
             <Calendario
               registros={registros}
-              onVer={setDetalleId}
+              eventos={eventos}
               puedeEditar={puedeEditar}
-              onNuevoEnFecha={(fecha) => setEditando({ registro: null, fechaInicial: fecha })}
+              avisoAgenda={avisoAgenda}
+              onVer={setDetalleId}
+              onNuevoEvento={(fecha, hora) => setEditandoEvento({ evento: null, fecha, hora })}
+              onEditarEvento={(evento) => setEditandoEvento({ evento })}
+              onEliminarEvento={eliminarEvento}
+              onCargarRegistro={(fecha) => setEditando({ registro: null, fechaInicial: fecha })}
             />
           )}
           {vista === 'analitica' && (
@@ -565,6 +680,9 @@ export default function App() {
               onImportarExcel={importarExcel}
               totalRegistros={registros.length}
               puedeEditar={puedeEditar}
+              directorio={directorio}
+              onAgregarMiembro={agregarMiembro}
+              onBorrarMiembro={borrarMiembro}
             />
           )}
         </div>
@@ -595,7 +713,20 @@ export default function App() {
           onCerrar={() => setEditando(null)}
         />
       )}
-      {docModal && puedeEditar && <DocModal onGuardar={guardarDoc} onCerrar={() => setDocModal(false)} />}
+      {editandoEvento && puedeEditar && (
+        <EventoModal
+          evento={editandoEvento.evento}
+          fechaInicial={editandoEvento.fecha}
+          horaInicial={editandoEvento.hora}
+          usuarios={usuarios}
+          directorio={directorio}
+          onGuardar={guardarEvento}
+          onEliminar={eliminarEvento}
+          onCargarRegistro={(fecha) => { setEditandoEvento(null); setEditando({ registro: null, fechaInicial: fecha }); }}
+          onCerrar={() => setEditandoEvento(null)}
+        />
+      )}
+      {docModal && puedeEditar &&<DocModal onGuardar={guardarDoc} onCerrar={() => setDocModal(false)} />}
       {perfilUsuarioAbierto && sesion && (
         <PerfilUsuarioModal
           userId={sesion.user.id}

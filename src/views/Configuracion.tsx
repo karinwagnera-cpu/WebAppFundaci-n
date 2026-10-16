@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import type { Tema } from '../types';
+import { useRef, useState } from 'react';
+import type { MiembroDirectorio, Tema } from '../types';
 import Icon from '../components/Icon';
 import { descargarPlantillaExcel } from '../lib/excelImport';
 
@@ -10,11 +10,14 @@ interface Props {
   onImportarExcel: (file: File) => void;
   totalRegistros: number;
   puedeEditar: boolean;
+  directorio: MiembroDirectorio[];
+  onAgregarMiembro: (m: Omit<MiembroDirectorio, 'id'>) => Promise<boolean>;
+  onBorrarMiembro: (id: number) => void;
 }
 
 const VERSION = '1.0.0';
 
-export default function Configuracion({ tema, onTema, onExportarCsv, onImportarExcel, totalRegistros, puedeEditar }: Props) {
+export default function Configuracion({ tema, onTema, onExportarCsv, onImportarExcel, totalRegistros, puedeEditar, directorio, onAgregarMiembro, onBorrarMiembro }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
@@ -81,6 +84,10 @@ export default function Configuracion({ tema, onTema, onExportarCsv, onImportarE
           </div>
         </div>
 
+        {puedeEditar && (
+          <DirectorioCard directorio={directorio} onAgregar={onAgregarMiembro} onBorrar={onBorrarMiembro} />
+        )}
+
         <div className="panel settings-card">
           <h3>Acerca de</h3>
           <div className="settings-row">
@@ -92,5 +99,57 @@ export default function Configuracion({ tema, onTema, onExportarCsv, onImportarE
         </div>
       </div>
     </section>
+  );
+}
+
+interface DirectorioProps {
+  directorio: MiembroDirectorio[];
+  onAgregar: (m: Omit<MiembroDirectorio, 'id'>) => Promise<boolean>;
+  onBorrar: (id: number) => void;
+}
+
+function DirectorioCard({ directorio, onAgregar, onBorrar }: DirectorioProps) {
+  const [nuevo, setNuevo] = useState({ nombre: '', email: '', cargo: '' });
+  const [guardando, setGuardando] = useState(false);
+
+  const agregar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try {
+      if (await onAgregar({ nombre: nuevo.nombre.trim(), email: nuevo.email.trim().toLowerCase(), cargo: nuevo.cargo.trim() })) {
+        setNuevo({ nombre: '', email: '', cargo: '' });
+      }
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="panel settings-card">
+      <h3>Directorio</h3>
+      <div className="settings-hint" style={{ maxWidth: 'none', marginBottom: 12 }}>
+        Miembros que pueden recibir avisos de la agenda aunque no usen el panel. Los usuarios de la plataforma ya aparecen solos al invitar.
+      </div>
+      {directorio.length > 0 && (
+        <ul className="dir-list">
+          {directorio.map((m) => (
+            <li key={m.id}>
+              <span className="dir-avatar">{m.nombre.charAt(0).toUpperCase()}</span>
+              <span className="dir-text">
+                <span className="dir-nombre">{m.nombre}{m.cargo && <small> · {m.cargo}</small>}</span>
+                <span className="dir-mail">{m.email}</span>
+              </span>
+              <button className="icon-btn" onClick={() => onBorrar(m.id)} aria-label={`Quitar a ${m.nombre}`} title="Quitar"><Icon name="trash" /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form className="dir-form" onSubmit={agregar}>
+        <input type="text" placeholder="Nombre *" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} aria-label="Nombre" />
+        <input type="email" placeholder="Mail *" value={nuevo.email} onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })} aria-label="Mail" />
+        <input type="text" placeholder="Cargo" value={nuevo.cargo} onChange={(e) => setNuevo({ ...nuevo, cargo: e.target.value })} aria-label="Cargo" />
+        <button type="submit" className="btn secondary" disabled={guardando}><Icon name="plus" /> Agregar</button>
+      </form>
+    </div>
   );
 }

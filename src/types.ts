@@ -154,3 +154,48 @@ export interface CampaniaForm {
 export type CampoAgrupacion = 'eje' | 'ejeSecundario' | 'unidad' | 'tipo' | 'mes' | 'beneficiario';
 export type MetricaGrafico = 'cantidad' | 'inversion' | 'costo' | 'horas';
 export type TipoGrafico = 'bar' | 'pie' | 'line';
+
+/** Evento de la agenda: liviano, independiente de los registros de acciones. */
+export interface Evento {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  ubicacion: string;
+  todoElDia: boolean;
+  /** ISO. En eventos de todo el día: 00:00 del primer día. */
+  inicio: string;
+  /** ISO. En eventos de todo el día: 00:00 del día siguiente al último (exclusivo). */
+  fin: string;
+  color: string;
+  invitados: string[];
+  /** Minutos antes del inicio en que se avisa por mail. */
+  recordatorios: number[];
+  registroId: number | null;
+}
+
+export interface EventoForm {
+  editingId: number | null;
+  titulo: string;
+  descripcion: string;
+  ubicacion: string;
+  todoElDia: boolean;
+  fecha: string;
+  fechaFin: string;
+  horaInicio: string;
+  horaFin: string;
+  color: string;
+  invitados: string[];
+  recordatorios: number[];
+}
+
+export interface MiembroDirectorio {
+  id: number;
+  nombre: string;
+  email: string;
+  cargo: string;
+}
+
+export interface UsuarioPlataforma {
+  email: string;
+  rol: Rol;
+}
